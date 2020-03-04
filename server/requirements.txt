@@ -1,0 +1,10 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: win-64
+
+click=7.0=py37_0
+flask=1.1.1=py_0
+jinja2=2.11.1=py_0
+setuptools=45.2.0=py37_0
+sqlite=3.31.1=he774522_0
+
