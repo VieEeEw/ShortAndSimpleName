@@ -1,6 +1,6 @@
 #USAGE
 First get into the project directory\
-`pip install -r requirements.txt`\
+`pip install -r pip-requirements.txt OR conda install --file conda-requirements.txt`\
 `SET FLASK_APP=server`\
 `SET FLASK_ENV=development`\
 (If on linux system, use export instead of set)\
