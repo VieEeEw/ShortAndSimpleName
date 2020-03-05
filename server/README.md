@@ -1,6 +1,6 @@
 #USAGE
 First get into the project directory\
-`pip install requirements.txt`\
+`pip install -r requirements.txt`\
 `SET FLASK_APP=server`\
 `SET FLASK_ENV=development`\
 (If on linux system, use export instead of set)\
