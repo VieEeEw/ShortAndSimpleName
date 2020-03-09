@@ -1,0 +1,2 @@
+# get dataset graph from http://waf.cs.illinois.edu/discovery/class_hierarchy_at_illinois/
+wget http://waf.cs.illinois.edu/discovery/class_hierarchy_at_illinois/static/res/class_hierarchy.json         
