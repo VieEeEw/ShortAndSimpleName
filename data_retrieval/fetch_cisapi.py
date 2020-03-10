@@ -5,8 +5,8 @@ import re
 import json
 
 # set to None if you want to process all courses, otherwise provide list of Subjects
-RESTRICT_TO_SUBJECTS = None  
-# RESTRICT_TO_SUBJECTS = ['AAS']
+# RESTRICT_TO_SUBJECTS = None  
+RESTRICT_TO_SUBJECTS = ['DANC']
 
 LOG_FILE = 'log.txt'
 
@@ -116,7 +116,7 @@ def parse_course(link):
     except:
         log_error(f'ERROR: \n{link}\n has no department or course number!')
     
-    match = re.match(r'.*Prerequisite: (.*?)\.', str(soup))
+    match = re.match(r'.*Prerequisites*: (.*?)\.', str(soup))
     if match is not None:
         course_dict['prereqs'] = parse_requirements(match.group(1))
     for section in soup.find_all('section'):
