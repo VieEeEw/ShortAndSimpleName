@@ -8,7 +8,7 @@ import json
 RESTRICT_TO_SUBJECTS = None  
 # RESTRICT_TO_SUBJECTS = ['AAS']
 
-LOG_FILE = None
+LOG_FILE = 'log.txt'
 
 # Parse data from cisapi, then write it in JSON format:
 example = { 
@@ -40,7 +40,7 @@ initialize regex compiled objects, etc
 '''
 def init():
     global LOG_FILE
-    LOG_FILE = open('log.txt', 'w')
+    LOG_FILE = open(LOG_FILE, 'w')
 
 
 '''
@@ -143,7 +143,6 @@ def parse_section(link):
     try:
         section_dict['crn'] = soup.find('ns2:section')['id']
     except:
-        error_text = f'ERROR: \n{link}\n has no crn!'
         log_error(f'ERROR: \n{link}\n has no crn!')
         LOG_FILE.write(f'ERROR: \n{link}\n has no crn!')
     if soup.sectionnumber is not None:
