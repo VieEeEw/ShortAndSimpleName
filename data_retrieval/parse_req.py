@@ -22,5 +22,5 @@ if __name__ == '__main__':
                         prereq_out.write('\n')
             print(f'{count} lines written to "prereqs.txt"')
         except Exception as e:
-            print('Make sure "cisdata.json" is in this directory')
+            print('Make sure "cisdata.json" is in this directory -> pull one from the link in the README')
             print(e)
