@@ -5,8 +5,8 @@ import re
 import json
 
 # set to None if you want to process all courses, otherwise provide list of Subjects
-# RESTRICT_TO_SUBJECTS = None  
-RESTRICT_TO_SUBJECTS = ['DANC']
+RESTRICT_TO_SUBJECTS = None  
+# RESTRICT_TO_SUBJECTS = ['DANC']
 
 LOG_FILE = 'log.txt'
 
