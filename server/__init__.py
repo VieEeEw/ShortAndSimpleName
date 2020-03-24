@@ -20,6 +20,9 @@ def create_app(test_config=None):
     from .db import register_db
     register_db(app)
 
+    from .auth import bp
+    app.register_blueprint(bp)
+
     @app.route('/')
     def index():
         return 'Hello World!'
