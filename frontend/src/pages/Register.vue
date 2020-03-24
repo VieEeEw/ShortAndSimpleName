@@ -1,8 +1,8 @@
 <template>
 	<Layout>
-		<h1>Login</h1>
+		<h1>Register</h1>
 		<p>
-			<form action="http://localhost:5000/auth/login" method="get">
+			<form action="http://localhost:5000/auth/register" method="get">
 				<div>
 					<label for="net_id">Enter your NetID: </label>
 					<input type="text" name="net_id" id="net_id" required>
@@ -22,7 +22,7 @@
 <script>
 export default {
 	metaInfo: {
-		title: 'Login'
+		title: 'Register'
 	}
 };
 </script>
