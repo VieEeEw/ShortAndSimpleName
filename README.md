@@ -5,3 +5,8 @@ This is the master branch.
 See README in server directory
 ## Run server
 To run the server, if on Linux/Mac OS, run `./run.sh`.
+## Server endpoint
+Index: /\
+About: /about\
+Login: /auth/login\
+Register: /auth/register\
