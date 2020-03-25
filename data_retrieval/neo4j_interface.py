@@ -80,7 +80,7 @@ class Neo4j_Interface():
 if __name__ == "__main__":
     db = Neo4j_Interface(URI, USER, PW)
 
-    db.delete_all()
+    # db.delete_all()
     # db.add_course("CS", 225)
 
     # db.add_course("CS", 411)
