@@ -34,8 +34,8 @@ def create_app(test_config=None):
     def about():
         return "An about-us page"
 
-    @app.route('/test')
-    def neo4j_test():
-        return neo4j_db.count_nodes()
+    @app.route('/data/sections/<crn>')
+    def neo4j_crn_data(crn):
+        return neo4j_db.get_crn_data(crn)
 
     return app

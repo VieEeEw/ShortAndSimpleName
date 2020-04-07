@@ -5,13 +5,15 @@ example:
     db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
     db.add_course("CS", 411)
 
-
 See available functions in the Neo4j_Interface() class.
+Parameters are always strings, but ints should be internally converted to ints.
 
 For ER diagram, see:
 https://wiki.illinois.edu/wiki/display/CS411AASP20/ShortAndSimpleName+-+ER+Design
 NOTE: user and prereqOf not implemented yet
 TODO: update ER diagram with digital version and normalized capitalization
+
+
 '''
 
 
@@ -29,6 +31,10 @@ class Neo4j_Interface():
 
 
     # -------  GET DATA FROM NEO4J  ------- #
+    def get_crn_data(self, crn):
+        with self._driver.session() as session:
+            return session.write_transaction(self._methods._get_crn_data, str(crn))
+
     def count_nodes(self):
         with self._driver.session() as session:
             return session.write_transaction(self._methods._count_nodes)
@@ -36,15 +42,15 @@ class Neo4j_Interface():
     # -------  ADD DATA TO NEO4J  ------- #
     def add_course(self, dept, num):
         with self._driver.session() as session:
-            session.write_transaction(self._methods._add_course, dept, num)
+            session.write_transaction(self._methods._add_course, dept, str(num))
 
     def add_section(self, dept, num, crn):
         with self._driver.session() as session:
-            session.write_transaction(self._methods._add_section, dept, num, crn)
+            session.write_transaction(self._methods._add_section, dept, str(num), str(crn))
 
     def add_meeting(self, crn, start, end, building, room):
         with self._driver.session() as session:
-            session.write_transaction(self._methods._add_meeting, crn, start, end, building, room)
+            session.write_transaction(self._methods._add_meeting, str(crn), start, end, building, str(room))
     
     # -------  DELETE FROM NEO4J  ------- #
     def delete_all(self):
@@ -57,7 +63,31 @@ class Neo4j_Interface():
 
 
     # internal helper methods
-    class _methods():      
+    class _methods():  
+
+        @staticmethod
+        def _get_crn_data(tx, crn):
+            result = tx.run(
+                "MATCH (c:Course)<-[:SectionOf]-(s:Section)<-[:MeetsFor]-(m:Meeting)-[:LocatedAt]->(b:Building) "
+                "WHERE s.crn = $crn "
+                "RETURN c, s, m, b",
+                crn=crn)
+            json = { 'crn': crn, 'dept': None, 'course_num': None, 'meetings': [] }
+            for record in result.records():
+                course = record['c']
+                json['dept'] = course.get('dept')
+                json['course_num'] = course.get('num')
+
+                meeting = record['m']
+                building = record['b']
+                json['meetings'].append(
+                { 
+                    'building': building.get('name'), 
+                    'room': meeting.get('room'), 
+                    'start': meeting.get('start'), 
+                    'end': meeting.get('end') 
+                })
+            return json
 
         @staticmethod
         def _count_nodes(tx):
@@ -98,7 +128,7 @@ class Neo4j_Interface():
 if __name__ == "__main__":
     # test code for starting from a naked neo4j database
 
-    # db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
+    db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
 
     # db.delete_all()
     # db.add_course("CS", 225)
@@ -112,5 +142,7 @@ if __name__ == "__main__":
     # db.add_section("CS", 411, 61869)
     # db.add_meeting(61869, "1:00pm", "2:00pm", "Siebel", 214)
 
-    # db.count_nodes()
+    # print(db.count_nodes())
+    # print(db.get_crn(62102))
+
     pass
