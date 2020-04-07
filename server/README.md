@@ -6,7 +6,7 @@ First get into the project directory\
 (If on linux system, use export instead of set)\
 At first run, initialize relational database by running the following command\
 `flask init-db`\
-See [First-time Neo4j Setup](#First-time Neo4j Setup) below.\
+See **First-time Neo4j Setup** below.\
 Then run the following command to start the server\
 `flask run`\
 Follow the appearing instructions to access the website.
