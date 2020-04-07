@@ -23,6 +23,9 @@ def create_app(test_config=None):
     from .auth import bp
     app.register_blueprint(bp)
 
+    from .neo4j_interface import Neo4j_Interface
+    neo4j_db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
+
     @app.route('/')
     def index():
         return 'Hello World!'
@@ -30,5 +33,9 @@ def create_app(test_config=None):
     @app.route('/about')
     def about():
         return "An about-us page"
+
+    @app.route('/test')
+    def neo4j_test():
+        return neo4j_db.count_nodes()
 
     return app
