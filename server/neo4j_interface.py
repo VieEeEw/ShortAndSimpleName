@@ -31,7 +31,7 @@ class Neo4j_Interface():
     # -------  GET DATA FROM NEO4J  ------- #
     def count_nodes(self):
         with self._driver.session() as session:
-            session.write_transaction(self._methods._count_nodes)
+            return session.write_transaction(self._methods._count_nodes)
 
     # -------  ADD DATA TO NEO4J  ------- #
     def add_course(self, dept, num):
@@ -63,7 +63,7 @@ class Neo4j_Interface():
         def _count_nodes(tx):
             result = tx.run("MATCH (a) "
                             "RETURN a")
-            print(f'num of nodes: {len([i for i in result.records()])}')
+            return str(len([i for i in result.records()]))
 
         @staticmethod
         def _add_course(tx, dept, num):
