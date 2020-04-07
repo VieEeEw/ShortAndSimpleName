@@ -52,5 +52,6 @@ if __name__ == '__main__':
                             db.add_meeting(section['crn'], meeting['start'], meeting['end'], meeting['building'], meeting['room'])
         print('Done!')
     except Exception as e:
-        print('Make sure "cisdata.json" is in this directory, and the Neo4j command line arguments are correct')
+        print('Make sure "cisdata.json" is in this directory, and the Neo4j command line arguments are correct.')
+        print('Make sure the Neo4j server is created and started.')
         print(e)
