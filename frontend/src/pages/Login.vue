@@ -2,7 +2,7 @@
 	<Layout>
 		<h1>Login</h1>
 		<p>
-			<form action="http://localhost:5000/auth/login" method="get">
+			<form action="http://localhost:5000/auth/login" method="post">
 				<div>
 					<label for="net_id">Enter your NetID: </label>
 					<input type="text" name="net_id" id="net_id" required>
