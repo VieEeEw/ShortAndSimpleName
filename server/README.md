@@ -13,6 +13,22 @@ Follow the appearing instructions to access the website.
 
 
 
+### BUGS
+
+If `flask run` produces a website that crashes and complains about a neo4j module that doesn't exist, run (on Linux)
+
+```
+pip install -r pip-requirements.txt
+python3 -c "import server.__init__ as s; s.create_app().run()"
+```
+
+This will use the Python3 executable associated with pip.
+ You may need to replace pip with pip3 above, depending on how you configured your system.
+
+
+
+
+
 ### First-time Neo4j Setup
 
 A Neo4j server needs to be running locally on your machine.
