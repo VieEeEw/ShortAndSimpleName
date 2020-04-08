@@ -6,15 +6,16 @@ This is the master branch.
 See README in server directory
 
 ## Run server
+Make sure virtual environment is activated in the shell.\
 Linux/Mac OS: run `./run-server.sh`.
-Windows: run `./run-server.bat`.
+Windows: run `run-server.bat`.
 
 ## Run frontend
 Linux/Mac OS: run `./run-frontend.sh`.
-Windows: run `./run-frontend.bat`.
+Windows: run `run-frontend.bat`.
 
 ## Server endpoint
 Index: /\
-About: /about\
 Login: /auth/login\
 Register: /auth/register\
+Adding...

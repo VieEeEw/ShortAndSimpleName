@@ -4,7 +4,12 @@
 
 click=7.0=py37_0
 flask=1.1.1=py_0
-jinja2=2.11.1=py_0
-setuptools=45.2.0=py37_0
+neo4j=1.7.6=pypi_0
+neo4j-python-driver=1.7.1=py37he774522_0
+pip=20.0.2=py37_1
+python=3.7.4=h5263a28_0
+python-dateutil=2.8.1=py_0
+pytz=2019.3=py_0
 sqlite=3.31.1=he774522_0
+
 
