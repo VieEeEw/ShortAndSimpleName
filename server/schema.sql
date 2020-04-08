@@ -15,6 +15,20 @@ CREATE TABLE IF NOT EXISTS vars (
 );
 INSERT OR REPLACE INTO vars VALUES ('xpire_gap', '+300 minutes');   -- Should be in that format
 
+DROP TRIGGER IF EXISTS vars_prevent_update
+CREATE TRIGGER vars_prevent_update
+    BEFORE UPDATE ON vars
+BEGIN
+    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.")
+END;
+
+DROP TRIGGER IF EXISTS vars_prevent_insert
+CREATE TRIGGER vars_prevent_insert
+    BEFORE INSERT ON vars
+BEGIN
+    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.")
+END;
+
 DROP TRIGGER IF EXISTS xpire_t_after_update_checker;
 CREATE TRIGGER xpire_t_after_update_checker
     AFTER UPDATE ON user
