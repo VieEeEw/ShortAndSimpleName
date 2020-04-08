@@ -23,8 +23,15 @@ def create_app(test_config=None):
     from .auth import bp
     app.register_blueprint(bp)
 
+    from .neo4j_interface import Neo4j_Interface
+    neo4j_db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
+
     @app.route('/')
     def index():
         return 'Success!'
+
+    @app.route('/data/sections/<crn>')
+    def neo4j_crn_data(crn):
+        return neo4j_db.get_crn_data(crn)
 
     return app
