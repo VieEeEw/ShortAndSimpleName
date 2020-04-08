@@ -7,7 +7,6 @@ CREATE TABLE user (
     `token`     TEXT NOT NULL,
     `xpire_t`   TIMESTAMP
 );
-INSERT INTO user(net_id, name, pswd, token) VALUES ("ACCESS", "", "ACCESS_TOKEN");
 
 CREATE TABLE IF NOT EXISTS vars (
     `var_name`  TEXT PRIMARY KEY,
@@ -15,18 +14,18 @@ CREATE TABLE IF NOT EXISTS vars (
 );
 INSERT OR REPLACE INTO vars VALUES ('xpire_gap', '+300 minutes');   -- Should be in that format
 
-DROP TRIGGER IF EXISTS vars_prevent_update
+DROP TRIGGER IF EXISTS vars_prevent_update;
 CREATE TRIGGER vars_prevent_update
     BEFORE UPDATE ON vars
 BEGIN
-    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.")
+    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.");
 END;
 
-DROP TRIGGER IF EXISTS vars_prevent_insert
+DROP TRIGGER IF EXISTS vars_prevent_insert;
 CREATE TRIGGER vars_prevent_insert
     BEFORE INSERT ON vars
 BEGIN
-    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.")
+    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.");
 END;
 
 DROP TRIGGER IF EXISTS xpire_t_after_update_checker;
@@ -48,3 +47,4 @@ BEGIN
     SET xpire_t = datetime('now', (SELECT var FROM vars WHERE var_name="xpire_gap"))
     WHERE "net_id" = NEW.net_id;
 END;
+INSERT INTO user(net_id, pswd, token) VALUES ('ACCESS', '', 'ACCESS_TOKEN');
