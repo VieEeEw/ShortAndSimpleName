@@ -6,10 +6,10 @@ from hashlib import md5
 
 from .db import get_db
 
-bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         netid = request.json['net_id']
@@ -35,7 +35,7 @@ def login():
         }, 403)
 
 
-@bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
         netid = request.json['net_id']
@@ -57,11 +57,16 @@ def register():
         }, 403)
 
 
-@bp.route('/delete', method=['POST'])
+@auth_bp.route('/delete', method=['POST'])
 def delete():
-    netid = request.json['net_id']
+    netid = session['net_id']
+    if netid is None:
+        return make_response({'error': 'Invalid login status, try login again'}, 403)
     db = get_db()
-    token, e_time = db.execute("SELECT token, xpire_t FROM user WHERE net_id=?", (netid,)).fetchone()
+    meta = db.execute("SELECT token, xpire_t FROM user WHERE net_id=?", (netid,)).fetchone()
+    if meta is None:
+        return make_response({'error': 'cannot find current user'})
+    token, e_time = meta
     if token is None or e_time > datetime.utcnow():
         error = 'Token expired.'
     elif token != session['token']:
@@ -74,3 +79,8 @@ def delete():
     return make_response({
         'error': error
     }, 403)
+
+
+@auth_bp.route('/update-pswd', method=['POST'])
+def update_pswd():
+    pass
