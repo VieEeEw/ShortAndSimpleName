@@ -5,10 +5,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from .db import get_db
 
-bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         netid = request.json['net_id']
@@ -33,7 +33,7 @@ def login():
         }, 403)
 
 
-@bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
         netid = request.json['net_id']
