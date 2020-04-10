@@ -11,17 +11,18 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
-        netid = request.form['net_id']
-        password = request.form['password']
+        netid = request.json['net_id']
+        password = request.json['password']
         db = get_db()
-        user = db.execute('SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone()
+        user = db.execute(
+            'SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone()
         if user is None:
             error = 'Netid not found, try register first.'
         elif not check_password_hash(user['pswd'], password):
             error = 'Incorrect username or password.'
         else:
             # If the token is invalid, generate a new token for the user
-            if isoparse(user['xpire_t']) < datetime.utcnow():
+            if user['xpire_t'] < datetime.utcnow():
                 db.execute("UPDATE user SET token = '[new_token]' WHERE net_id = ?",
                            (netid,))  # FIXME Change new_token to a valid new token
             return make_response({
@@ -35,8 +36,8 @@ def login():
 @bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
-        netid = request.form['net_id']
-        password = request.form['password']
+        netid = request.json['net_id']
+        password = request.json['password']
         db = get_db()
         if netid is None or password is None:
             error = 'Invalid netid or password'
