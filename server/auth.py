@@ -14,7 +14,8 @@ def login():
         netid = request.json['net_id']
         password = request.json['password']
         db = get_db()
-        user = db.execute('SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone()
+        user = db.execute(
+            'SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone()
         if user is None:
             error = 'Netid not found, try register first.'
         elif not check_password_hash(user['pswd'], password):
