@@ -73,6 +73,10 @@ class Neo4j_Interface():
     # crn (section) -> get meetings
 
     # -------  GET DATA FROM NEO4J  ------- #
+    def get_all_courses(self):
+        with self._driver.session() as session:
+            return session.write_transaction(self._methods._get_all_courses)
+
     def get_crn_data(self, crn):
         with self._driver.session() as session:
             return session.write_transaction(self._methods._get_crn_data, str(crn))
@@ -109,6 +113,20 @@ class Neo4j_Interface():
 
     # internal helper methods
     class _methods():
+
+        @staticmethod
+        def _get_all_courses(tx):
+            result = tx.run(
+                "MATCH (c:Course) "
+                "RETURN c")
+            json = { "courses": [] }
+            for record in result.records():
+                course = record['c']
+                json['courses'].append({ 
+                    "dept": course.get('dept'),
+                    "course_num": course.get('num')
+                })
+            return json
 
         @staticmethod
         def _get_crn_data(tx, crn):
