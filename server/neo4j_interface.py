@@ -1,4 +1,3 @@
-
 '''
 Initialize an interface with: Neo4j_Interface(URI, USER, PW)
 example: 
@@ -16,8 +15,9 @@ TODO: update ER diagram with digital version and normalized capitalization
 
 '''
 
-
 from neo4j import GraphDatabase
+from flask import current_app, g
+
 
 class Neo4j_Interface():
 
@@ -28,7 +28,6 @@ class Neo4j_Interface():
     # course -> get info
     # course -> get sections
     # crn (section) -> get meetings
-
 
     # -------  GET DATA FROM NEO4J  ------- #
     def get_crn_data(self, crn):
@@ -51,7 +50,7 @@ class Neo4j_Interface():
     def add_meeting(self, crn, start, end, building, room):
         with self._driver.session() as session:
             session.write_transaction(self._methods._add_meeting, str(crn), start, end, building, str(room))
-    
+
     # -------  DELETE FROM NEO4J  ------- #
     def delete_all(self):
         with self._driver.session() as session:
@@ -61,9 +60,8 @@ class Neo4j_Interface():
     def close(self):
         self._driver.close()
 
-
     # internal helper methods
-    class _methods():  
+    class _methods():
 
         @staticmethod
         def _get_crn_data(tx, crn):
@@ -72,7 +70,7 @@ class Neo4j_Interface():
                 "WHERE s.crn = $crn "
                 "RETURN c, s, m, b",
                 crn=crn)
-            json = { 'crn': crn, 'dept': None, 'course_num': None, 'meetings': [] }
+            json = {'crn': crn, 'dept': None, 'course_num': None, 'meetings': []}
             for record in result.records():
                 course = record['c']
                 json['dept'] = course.get('dept')
@@ -81,12 +79,12 @@ class Neo4j_Interface():
                 meeting = record['m']
                 building = record['b']
                 json['meetings'].append(
-                { 
-                    'building': building.get('name'), 
-                    'room': meeting.get('room'), 
-                    'start': meeting.get('start'), 
-                    'end': meeting.get('end') 
-                })
+                    {
+                        'building': building.get('name'),
+                        'room': meeting.get('room'),
+                        'start': meeting.get('start'),
+                        'end': meeting.get('end')
+                    })
             return json
 
         @staticmethod
@@ -123,12 +121,30 @@ class Neo4j_Interface():
         def _delete_all(tx):
             tx.run(
                 "MATCH (a) "
-                "DETACH DELETE a ")   
+                "DETACH DELETE a ")
+
+
+def get_graph_db():
+    if 'graph_db' not in g:
+        g.graph_db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
+    return g.graph_db
+
+
+def close_graph_db(e=None):
+    try:
+        g.pop('graph_db', None).close()
+    except AttributeError:
+        return
+
+
+def register_graph_db(app):
+    app.teardown_appcontext(close_graph_db)
+
 
 if __name__ == "__main__":
     # test code for starting from a naked neo4j database
 
-    db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
+    # db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
 
     # db.delete_all()
     # db.add_course("CS", 225)

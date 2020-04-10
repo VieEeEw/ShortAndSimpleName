@@ -29,8 +29,8 @@ Parses a json of the following format:
 
 import json
 import sys
-from bs4 import BeautifulSoup
 from neo4j_interface import Neo4j_Interface
+
 
 
 if __name__ == '__main__':

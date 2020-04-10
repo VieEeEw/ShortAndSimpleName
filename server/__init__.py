@@ -17,8 +17,9 @@ def create_app(test_config=None):
         os.mkdir(app.instance_path)
     except OSError:
         pass
-    from .db import register_db
+    from .db import register_db, register_graph_db
     register_db(app)
+    register_graph_db(app)
 
     from .auth import bp
     app.register_blueprint(bp)
@@ -33,5 +34,10 @@ def create_app(test_config=None):
     @app.route('/data/sections/<crn>')
     def neo4j_crn_data(crn):
         return neo4j_db.get_crn_data(crn)
+
+    @app.after_request
+    def add_access_header(response):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
     return app

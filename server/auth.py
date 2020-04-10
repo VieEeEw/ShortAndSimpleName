@@ -1,7 +1,7 @@
-from flask import Blueprint, redirect, make_response, request, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
-from dateutil.parser import isoparse
 from datetime import datetime
+
+from flask import Blueprint, make_response, request
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from .db import get_db
 
@@ -21,7 +21,7 @@ def login():
             error = 'Incorrect username or password.'
         else:
             # If the token is invalid, generate a new token for the user
-            if isoparse(user['xpire_t']) < datetime.utcnow():
+            if user['xpire_t'] < datetime.utcnow():
                 db.execute("UPDATE user SET token = '[new_token]' WHERE net_id = ?",
                            (netid,))  # FIXME Change new_token to a valid new token
             return make_response({
