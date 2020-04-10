@@ -5,4 +5,4 @@ export FLASK_APP=server
 export FLASK_ENV=development
 
 # Start flask server
-flask run &
+flask run
