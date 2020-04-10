@@ -31,8 +31,4 @@ def create_app(test_config=None):
     def index():
         return 'Success!'
 
-    @app.route('/data/sections/<crn>')
-    def neo4j_crn_data(crn):
-        return neo4j_db.get_crn_data(crn)
-
     return app
