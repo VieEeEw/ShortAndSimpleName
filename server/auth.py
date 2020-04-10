@@ -4,9 +4,9 @@ from flask import Blueprint, make_response, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .db import get_db
+from flask_cors import CORS
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
-from flask_cors import CORS
 
 CORS(auth_bp)
 
@@ -55,3 +55,22 @@ def register():
         return make_response({
             'error': error
         }, 403)
+
+
+@auth_bp.route('/delete', method=['POST'])
+def delete():
+    netid = request.json['net_id']
+    db = get_db()
+    db.execute("DELETE FROM user WHERE net_id=?", (netid,))
+    db.commit()
+    return make_response({'status': "delete successfully"}, 200)
+
+
+@auth_bp.route('/update-pswd', method=['POST'])
+def update_pswd():
+    netid = request.json['net_id']
+    password = request.json['password']
+    db = get_db()
+    db.execute('UPDATE user SET pswd=? WHERE net_id=?', (password, netid))
+    db.commit()
+    return make_response({'status': "update successfully"})

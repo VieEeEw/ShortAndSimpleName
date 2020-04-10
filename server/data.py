@@ -6,7 +6,7 @@ data_bp = Blueprint('data', __name__, url_prefix='/data')
 CORS(data_bp)
 
 
-@data_bp.route('/course/<subject>/<number>', method=['GET', 'PUT', 'PATCH', 'DELETE'])
+@data_bp.route('/course/<subject>/<number>', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 def course_dispatch(subject, number):
     gdb = get_graph_db()
     if request.method == 'GET':
@@ -22,6 +22,6 @@ def course_dispatch(subject, number):
         return make_response({'status': 'add successful'}, 200)
 
 
-@data_bp.route('/courses', method=['GET'])
+@data_bp.route('/courses', methods=['GET'])
 def courses():
     return get_graph_db().get_all_courses()

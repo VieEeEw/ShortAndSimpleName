@@ -106,9 +106,9 @@ class Neo4j_Interface():
         return {}
 
     # -------  EDIT/DELETE IN NEO4J  ------- #
-    def change_class_num(dept, num, new_num):
+    def change_class_num(self, dept, num, new_num):
         with self._driver.session() as session:
-            session.write_transaction(self._change_class_num, dept, num, new_num)
+            session.write_transaction(self._methods._change_class_num, dept, num, new_num)
         return {}
 
     def delete_course(self, dept, num):
