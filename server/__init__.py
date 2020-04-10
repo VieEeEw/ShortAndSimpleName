@@ -18,16 +18,14 @@ def create_app(test_config=None):
         os.mkdir(app.instance_path)
     except OSError:
         pass
-    from .db import register_db
+    from .db import register_db, register_graph_db
     register_db(app)
+    register_graph_db(app)
 
     from .auth import bp
     from flask_cors import CORS
     CORS(bp)
     app.register_blueprint(bp)
-
-    # from .neo4j_interface import Neo4j_Interface
-    # neo4j_db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
 
     @app.route('/')
     def index():

@@ -1,4 +1,5 @@
 from neo4j import GraphDatabase
+import sqlite3
 
 
 class HelloWorldExample:
@@ -21,5 +22,13 @@ class HelloWorldExample:
         return result.single()[0]
 
 
-db = HelloWorldExample('bolt://localhost:7687', 'neo4j', 'CS411')
-db.print_greeting("Hello")
+# db = HelloWorldExample('bolt://localhost:7687', 'neo4j', 'CS411')
+# db.print_greeting("Hello")
+
+db = sqlite3.connect('../instance/server.sqlite')
+while True:
+    crn = input()
+    if crn == 's':
+        break
+    db.executescript(f'INSERT INTO sections(`course_number` , `course_subject`, `crn`) VALUES(100, "AAS", {crn})')
+db.close()
