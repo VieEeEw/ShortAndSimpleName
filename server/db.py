@@ -77,6 +77,10 @@ class Neo4j_Interface():
         with self._driver.session() as session:
             return session.write_transaction(self._methods._get_all_courses)
 
+    def get_sections(self, dept, num):
+        with self._driver.session() as session:
+            return session.write_transaction(self._methods._get_sections, dept, str(num))
+
     def get_crn_data(self, crn):
         with self._driver.session() as session:
             return session.write_transaction(self._methods._get_crn_data, str(crn))
@@ -89,23 +93,33 @@ class Neo4j_Interface():
     def add_course(self, dept, num):
         with self._driver.session() as session:
             session.write_transaction(self._methods._add_course, dept, str(num))
+        return {}
 
     def add_section(self, dept, num, crn):
         with self._driver.session() as session:
             session.write_transaction(self._methods._add_section, dept, str(num), str(crn))
+        return {}
 
     def add_meeting(self, crn, start, end, building, room):
         with self._driver.session() as session:
             session.write_transaction(self._methods._add_meeting, str(crn), start, end, building, str(room))
+        return {}
 
     # -------  EDIT/DELETE IN NEO4J  ------- #
     def change_class_num(dept, num, new_num):
         with self._driver.session() as session:
             session.write_transaction(self._change_class_num, dept, num, new_num)
+        return {}
+
+    def delete_course(self, dept, num):
+        with self._driver.session() as session:
+            session.write_transaction(self._methods._delete_course, dept, str(num))
+        return {}
 
     def delete_all(self):
         with self._driver.session() as session:
             session.write_transaction(self._methods._delete_all)
+        return {}
 
     # close the driver
     def close(self):
@@ -126,6 +140,22 @@ class Neo4j_Interface():
                     "dept": course.get('dept'),
                     "course_num": course.get('num')
                 })
+            return json
+
+        @staticmethod
+        def _get_sections(tx, dept, num):
+            result = tx.run(
+                "MATCH (c:Course)<-[:SectionOf]-(s:Section) "
+                "WHERE c.dept = $dept AND c.num = $num "
+                "RETURN s",
+                dept=dept, num=num)
+            json = { "sections": [] }
+            for record in result.records():
+                section = record['s']
+                json['sections'].append({ 
+                    "crn": section.get('crn'),
+                })
+            print(json)
             return json
 
         @staticmethod
@@ -188,7 +218,15 @@ class Neo4j_Interface():
                 "MATCH (c:Course) "
                 "WHERE c.dept = $dept AND c.num = $num "
                 "SET c.num = $new_num ",
-                dept=dept, num=num, new_num=new_num)      
+                dept=dept, num=num, new_num=new_num)    
+
+        @staticmethod
+        def _delete_course(tx, dept, num):
+            tx.run(
+                "MATCH (c:Course) "
+                "WHERE c.dept = $dept AND c.num = $num "
+                "DETACH DELETE c ",
+                dept=dept, num=num)
 
         @staticmethod
         def _delete_all(tx):
