@@ -27,9 +27,6 @@ def create_app(test_config=None):
     CORS(bp)
     app.register_blueprint(bp)
 
-    from .neo4j_interface import Neo4j_Interface
-    neo4j_db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
-
     @app.route('/')
     def index():
         return 'Success!'
