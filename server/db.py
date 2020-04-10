@@ -94,7 +94,11 @@ class Neo4j_Interface():
         with self._driver.session() as session:
             session.write_transaction(self._methods._add_meeting, str(crn), start, end, building, str(room))
 
-    # -------  DELETE FROM NEO4J  ------- #
+    # -------  EDIT/DELETE IN NEO4J  ------- #
+    def change_class_num(dept, num, new_num):
+        with self._driver.session() as session:
+            session.write_transaction(self._change_class_num, dept, num, new_num)
+
     def delete_all(self):
         with self._driver.session() as session:
             session.write_transaction(self._methods._delete_all)
@@ -159,6 +163,14 @@ class Neo4j_Interface():
                 "CREATE (m)-[:MeetsFor]->(s) "
                 "CREATE (m)-[:LocatedAt]->(b)",
                 crn=crn, room=room, start=start, end=end, building=building)
+
+        @staticmethod
+        def _change_class_num(tx, dept, num, new_num):
+            tx.run(
+                "MATCH (c:Course) "
+                "WHERE c.dept = $dept AND c.num = $num "
+                "SET c.num = $new_num ",
+                dept=dept, num=num, new_num=new_num)      
 
         @staticmethod
         def _delete_all(tx):
