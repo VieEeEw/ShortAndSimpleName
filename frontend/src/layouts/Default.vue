@@ -8,8 +8,8 @@
 				<g-link class="nav__link" to="/">Home</g-link>
 				<g-link class="nav__link" to="/login/">Login</g-link>
 				<g-link class="nav__link" to="/register/">Register</g-link>
-                <g-link class="nav__link" to="/Change/">Login</g-link>
-				<g-link class="nav__link" to="/Delete/">Register</g-link>
+                <g-link class="nav__link" to="/Change/">Change</g-link>
+				<g-link class="nav__link" to="/Delete/">Delete</g-link>
 			</nav>
 		</header>
 		<slot />
