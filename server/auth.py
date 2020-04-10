@@ -57,7 +57,7 @@ def register():
         }, 403)
 
 
-@auth_bp.route('/delete', method=['POST'])
+@auth_bp.route('/delete', methods=['POST'])
 def delete():
     netid = request.json['net_id']
     db = get_db()
@@ -66,7 +66,7 @@ def delete():
     return make_response({'status': "delete successfully"}, 200)
 
 
-@auth_bp.route('/update-pswd', method=['POST'])
+@auth_bp.route('/update-pswd', methods=['POST'])
 def update_pswd():
     netid = request.json['net_id']
     password = request.json['password']
