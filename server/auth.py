@@ -6,6 +6,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from .db import get_db
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+from flask_cors import CORS
+
+CORS(auth_bp)
 
 
 @auth_bp.route('/login', methods=['POST'])

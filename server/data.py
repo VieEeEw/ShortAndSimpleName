@@ -1,7 +1,9 @@
 from flask import Blueprint, make_response, request, session
 from .db import get_db, get_graph_db
+from flask_cors import CORS
 
 data_bp = Blueprint('data', __name__, url_prefix='/data')
+CORS(data_bp)
 
 
 @data_bp.route('/course/<subject>/<number>', method=['GET', 'PUT', 'PATCH', 'DELETE'])
