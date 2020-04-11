@@ -26,9 +26,6 @@ def create_app(test_config=None):
     from flask_cors import CORS
     CORS(auth_bp)
     app.register_blueprint(auth_bp)
-    from .data import data_bp
-    CORS(data_bp)
-    app.register_blueprint(data_bp)
 
     @app.route('/')
     def index():

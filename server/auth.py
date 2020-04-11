@@ -5,9 +5,13 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from hashlib import md5
 
 from .db import get_db
+from .util import validate_token
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+
+# 401: Unauthorized for expired and invalid token
+# 403: Forbidden
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -57,30 +61,36 @@ def register():
         }, 403)
 
 
-@auth_bp.route('/delete', method=['POST'])
+@auth_bp.route('/delete', methods=['POST'])
 def delete():
     netid = session['net_id']
     if netid is None:
         return make_response({'error': 'Invalid login status, try login again'}, 403)
     db = get_db()
-    meta = db.execute("SELECT token, xpire_t FROM user WHERE net_id=?", (netid,)).fetchone()
-    if meta is None:
-        return make_response({'error': 'cannot find current user'})
-    token, e_time = meta
-    if token is None or e_time > datetime.utcnow():
-        error = 'Token expired.'
-    elif token != session['token']:
-        error = 'Invalid token.'
-    else:
-        db.execute("DELETE FROM user WHERE net_id=?", (netid,))
-        db.commit()
-        session.pop('token')
-        return make_response({'status': "delete successfully"}, 200)
-    return make_response({
-        'error': error
-    }, 403)
+    code, error = validate_token(db, netid, session['token'])
+    if code != 200:
+        return make_response({
+            'error': error
+        }, code)
+    db.execute("DELETE FROM user WHERE net_id=?", (netid,))
+    db.commit()
+    session.pop('token')
+    return make_response({'status': "delete successfully"}, 200)
 
 
-@auth_bp.route('/update-pswd', method=['POST'])
+@auth_bp.route('/update-pswd', methods=['POST'])
 def update_pswd():
-    pass
+    netid = session['net_id']
+    pswd = request.json['password']
+    new_pswd = request.json['new_password']
+    if netid is None:
+        return make_response({'error': 'Invalid login status, try login again'}, 403)
+    db = get_db()
+    code, error = validate_token(db, netid, session['token'], check_pswd=True, password=pswd)
+    if code != 200:
+        return make_response({
+            'error': error
+        }, code)
+    db.execute("UPDATE FROM user SET pswd=? WHERE net_id=?", (generate_password_hash(new_pswd), netid))
+    db.commit()
+    return make_response({'status': "delete successfully"}, 200)

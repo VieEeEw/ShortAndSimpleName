@@ -4,7 +4,7 @@ from .db import get_db, get_graph_db
 data_bp = Blueprint('data', __name__, url_prefix='/data')
 
 
-@data_bp.route('/course/<subject>/<number>', method=['GET', 'PUT', 'PATCH', 'DELETE'])
+@data_bp.route('/course/<subject>/<number>', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 def course_dispatch(subject, number):
     # FIXME check token and net_id
     gdb = get_graph_db()
@@ -18,6 +18,6 @@ def course_dispatch(subject, number):
         pass
 
 
-@data_bp.route('/courses', method=['GET'])
+@data_bp.route('/courses', methods=['GET'])
 def courses():
     return get_graph_db().get_all_courses()
