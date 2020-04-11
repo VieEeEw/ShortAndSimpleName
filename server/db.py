@@ -59,7 +59,6 @@ TODO: update ER diagram with digital version and normalized capitalization
 '''
 
 from neo4j import GraphDatabase
-from flask import current_app, g
 
 
 class Neo4j_Interface():

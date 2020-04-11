@@ -8,20 +8,21 @@ CREATE TABLE user (
     `xpire_t`   TIMESTAMP
 );
 
-DROP TRIGGER IF EXISTS vars_prevent_update;
+
 CREATE TABLE IF NOT EXISTS vars (
     `var_name`  TEXT PRIMARY KEY,
     `var`       TEXT NOT NULL
 );
--- INSERT OR REPLACE INTO vars VALUES ('xpire_gap', '+300 minutes');   -- Should be in that format
-
--- CREATE TRIGGER vars_prevent_update
---     BEFORE UPDATE ON vars
--- BEGIN
---     SELECT RAISE(ABORT, "Read-only table, contact db manager for help.");
--- END;
-
+DROP TRIGGER IF EXISTS vars_prevent_update;
 DROP TRIGGER IF EXISTS vars_prevent_insert;
+INSERT OR REPLACE INTO vars VALUES ('xpire_gap', '+300 minutes');   -- Should be in that format
+
+CREATE TRIGGER vars_prevent_update
+    BEFORE UPDATE ON vars
+BEGIN
+    SELECT RAISE(ABORT, "Read-only table, contact db manager for help.");
+END;
+
 CREATE TRIGGER vars_prevent_insert
     BEFORE INSERT ON vars
 BEGIN
@@ -51,15 +52,15 @@ INSERT INTO user(net_id, pswd, token) VALUES ('ACCESS', '', 'ACCESS_TOKEN');
 
 -- The following is for demo
 DROP TABLE IF EXISTS courses;
-CREATE TABLE courses (
-    `number`    INT NOT NULL,
-    `subject`   VARCHAR(10) NOT NULL,
-    PRIMARY KEY(`number`, `subject`)
-);
+-- CREATE TABLE courses (
+--     `number`    INT NOT NULL,
+--     `subject`   VARCHAR(10) NOT NULL,
+--     PRIMARY KEY(`number`, `subject`)
+-- );
 DROP TABLE IF EXISTS sections;
-CREATE TABLE sections (
-    `course_number`     INT NOT NULL,
-    `course_subject`    VARCHAR(10) NOT NULL,
-    `crn`               INT PRIMARY KEY,
-    FOREIGN KEY(`course_number`, "course_subject") REFERENCES courses(number, subject)
-);
+-- CREATE TABLE sections (
+--     `course_number`     INT NOT NULL,
+--     `course_subject`    VARCHAR(10) NOT NULL,
+--     `crn`               INT PRIMARY KEY,
+--     FOREIGN KEY(`course_number`, "course_subject") REFERENCES courses(number, subject)
+-- );
