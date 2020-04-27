@@ -52,9 +52,9 @@ def register():
             error = f'Netid {netid} already registered, try login instead.'
         else:
             new_token = md5(f"{password}{datetime.utcnow()}".encode()).hexdigest()
-            db.execute('INSERT INTO user(net_id, name, pswd, token) VALUES (?, ?, ?, ?)',
+            db.execute('INSERT INTO user(net_id, `name`, pswd, token) VALUES (?, ?, ?, ?)',
                        (netid, request.json['name'] if 'name' in request.json else None,
-                        generate_password_hash(password)), new_token)
+                        generate_password_hash(password), new_token))
             db.commit()
             return make_response({'status': "create successfully"}, 200)
         return make_response({
