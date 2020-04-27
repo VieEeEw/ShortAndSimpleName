@@ -15,7 +15,8 @@ def test_server_command():
     # Check neo4j auth
     try:
         Neo4jInterface(current_app.config['GRAPH_DB']['url'], current_app.config['GRAPH_DB']['username'],
-                       current_app.config['GRAPH_DB']['pswd'])
+                       current_app.config['GRAPH_DB']['pswd']).close()
     except Exception as e:
         click.echo(f"Incorrect username/password/url for neo4j database, got an error of type {type(e)}")
+        return
     click.echo("All pre-test passed, you can run the server now")
