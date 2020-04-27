@@ -29,7 +29,7 @@ Parses a json of the following format:
 
 import json
 import sys
-from db import Neo4j_Interface
+from db import Neo4jInterface
 
 
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         exit(1)
     try:
         print("Running...")
-        db = Neo4j_Interface(sys.argv[1], sys.argv[2], sys.argv[3])
+        db = Neo4jInterface(sys.argv[1], sys.argv[2], sys.argv[3])
         with open('cisdata.json', 'r') as json_file:
             data = json.load(json_file)
             for course in data['courses']:
