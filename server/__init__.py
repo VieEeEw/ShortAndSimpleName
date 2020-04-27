@@ -9,20 +9,23 @@ def create_app(test_config=None):
     app.config.from_mapping(SECRET_KEY=SECRET_KEY,
                             DATABASE=os.path.join(
                                 app.instance_path, 'server.sqlite'),
-                            GRAPH_DB={
-                                'url': 'bolt://localhost:7687',
-                                'username': 'neo4j',
-                                'pswd': 'password'
-                            }
                             )
+
+    from . import config
+    app.config.from_object(config)
     if test_config is None:
         app.config.from_pyfile('config.py', silent=True)
     else:
+        # If test_config is given
         app.config.from_mapping(test_config)
     try:
         os.mkdir(app.instance_path)
     except OSError:
         pass
+    # Add test command
+    from .test_server import test_server_command
+    app.cli.add_command(test_server_command)
+
     from .rdb import register_db
     from .gdb import register_graph_db
     register_db(app)
@@ -37,9 +40,9 @@ def create_app(test_config=None):
     def index():
         return 'Success!'
 
-    @app.route('/_test')
-    def test():
-        print('graph_db' in current_app)
-        return "Testing"
+    # A test end point.
+    @app.route('/check-config/<config_name>')
+    def test(config_name):
+        return str(app.config[config_name])
 
     return app

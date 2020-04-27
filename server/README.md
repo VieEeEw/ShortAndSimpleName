@@ -19,19 +19,21 @@ Activate conda virtual environment: `conda activate env`\
 PyCharm is an IDE that provides extremely powerful support for virtual environment, considering using PyCharm is a good idea.
 ## Running the server
 ***Be sure to finish setting up the virtual environment and activate it before going in this step***\
+First, in config.py file, set your neo4j url, username and password in GRAPH_DB dictionary variable.\
 Set two variables in terminal(shell)
 `SET FLASK_APP=server` \
 `SET FLASK_ENV=development`(if in development mode)\
 (Switch `SET` to `export` on Linux/Unix OS)\
 At first run, initialize the relational database by running the following command\
 `flask init-db` (See **First-time Neo4j Setup** below)\
+Before run the server, you can run a pre-test `flask test-server`.\
 Then run the following command to start the server\
 `flask run`\
 If the database has been initialized, run `run-server.bat` or `./run-server.sh` 
 
 
 
-### First-time Neo4j Setup
+### First-time Neo4j Setup (Importing data)
 
 A Neo4j server needs to be running locally on your machine.
 
