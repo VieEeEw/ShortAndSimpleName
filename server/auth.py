@@ -1,48 +1,97 @@
-import functools
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+from datetime import datetime
+
+from flask import Blueprint, make_response, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
+from hashlib import md5
+
 from .db import get_db
+from .util import validate_token
 
-bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@bp.route('/login', methods=['POST', 'GET'])
+# 401: Unauthorized for expired and invalid token
+# 403: Forbidden
+
+@auth_bp.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
-        netid = request.form['net_id']
-        password = request.form['password']
+        netid = request.json['net_id']
+        password = request.json['password']
         db = get_db()
-        userpass = db.execute('SELECT pswd FROM user WHERE net_id = ?', (netid,)).fetchone()
-        if userpass is None:
+        user = db.execute(
+            'SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone()
+        if user is None:
             error = 'Netid not found, try register first.'
-        elif not check_password_hash(userpass, password):
+        elif not check_password_hash(user['pswd'], password):
             error = 'Incorrect username or password.'
         else:
-            session.clear()
-            session['netid'] = netid
-            return redirect(url_for('index'))
-        flash(error)
-    elif request.method == 'GET':
-        # TODO return a template of login page with render_template
-        return redirect(url_for('index'))
+            # If the token is invalid, generate a new token for the user
+            if user['xpire_t'] < datetime.utcnow():
+                new_token = md5(f"{password}{datetime.utcnow()}".encode()).hexdigest()
+                db.execute("UPDATE user SET token = ? WHERE net_id = ?",
+                           (new_token, netid))
+                session['token'] = new_token
+            return make_response({
+                'status': "Login successfully"
+            }, 200)
+        return make_response({
+            'error': error
+        }, 403)
 
 
-@bp.route('/register', methods=['POST', 'GET'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     if request.method == 'POST':
-        netid = request.form['net_id']
-        password = request.form['password']
+        netid = request.json['net_id']
+        password = request.json['password']
         db = get_db()
         if netid is None or password is None:
             error = 'Invalid netid or password'
         elif db.execute('SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone() is not None:
             error = f'Netid {netid} already registered, try login instead.'
         else:
-            db.execute('INSERT INTO user(net_id, name, pswd) VALUES (?, ?, ?)',
-                       (netid, request.form['name'], generate_password_hash(password)))
+            new_token = md5(f"{password}{datetime.utcnow()}".encode()).hexdigest()
+            db.execute('INSERT INTO user(net_id, name, pswd, token) VALUES (?, ?, ?, ?)',
+                       (netid, request.json['name'] if 'name' in request.json else None,
+                        generate_password_hash(password)), new_token)
             db.commit()
-            return redirect(url_for('auth.login'))
-        flash(error)
-    elif request.method == 'GET':
-        # TODO Return a html using render_template
-        return None
+            return make_response({'status': "create successfully"}, 200)
+        return make_response({
+            'error': error
+        }, 403)
+
+
+@auth_bp.route('/delete', methods=['POST'])
+def delete():
+    netid = session['net_id']
+    if netid is None:
+        return make_response({'error': 'Invalid login status, try login again'}, 403)
+    db = get_db()
+    code, error = validate_token(db, netid, session['token'])
+    if code != 200:
+        return make_response({
+            'error': error
+        }, code)
+    db.execute("DELETE FROM user WHERE net_id=?", (netid,))
+    db.commit()
+    session.pop('token')
+    return make_response({'status': "delete successfully"}, 200)
+
+
+@auth_bp.route('/update-pswd', methods=['POST'])
+def update_pswd():
+    netid = session['net_id']
+    pswd = request.json['password']
+    new_pswd = request.json['new_password']
+    if netid is None:
+        return make_response({'error': 'Invalid login status, try login again'}, 403)
+    db = get_db()
+    code, error = validate_token(db, netid, session['token'], check_pswd=True, password=pswd)
+    if code != 200:
+        return make_response({
+            'error': error
+        }, code)
+    db.execute("UPDATE FROM user SET pswd=? WHERE net_id=?", (generate_password_hash(new_pswd), netid))
+    db.commit()
+    return make_response({'status': "delete successfully"}, 200)
