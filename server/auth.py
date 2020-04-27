@@ -4,7 +4,7 @@ from flask import Blueprint, make_response, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 from hashlib import md5
 
-from .db import get_db
+from .rdb import get_db
 from .util import validate_token
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')

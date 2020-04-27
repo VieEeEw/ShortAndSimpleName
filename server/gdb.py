@@ -1,49 +1,7 @@
-import sqlite3
-
-import click
-from flask import current_app, g
-from flask.cli import with_appcontext
 from neo4j import GraphDatabase
+from flask import current_app, g
 
-
-# For each request, get the database.
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
-
-def close_db(e=None):
-    try:
-        g.pop('db', None).close()
-    except AttributeError:
-        return
-
-
-def init_db():
-    db = get_db()
-    with current_app.open_resource('schema.sql') as sql:
-        db.executescript(sql.read().decode('UTF-8'))
-
-
-@click.command('init-db')
-@with_appcontext
-def init_db_command():
-    init_db()
-    click.echo("Database initialized")
-
-
-def register_db(app):
-    app.teardown_appcontext(close_db)
-    app.cli.add_command(init_db_command)
-
-
-# Graph database
-'''
+"""
 Initialize an interface with: Neo4j_Interface(URI, USER, PW)
 example: 
     db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
@@ -58,7 +16,7 @@ NOTE: user and prereqOf not implemented yet
 TODO: update ER diagram with digital version and normalized capitalization
 
 
-'''
+"""
 
 
 class Neo4jInterface:
@@ -164,13 +122,23 @@ class Neo4jInterface:
             "DETACH DELETE a ")
 
 
-def get_graph_db(*, url='bolt://localhost:7687', username='neo4j', pswd='password'):
+def get_graph_db():
+    """
+    Create an connection with neo4j database for each request.
+    :return: The neo4j database (An instance of Neo4jInterface)
+    """
     if 'graph_db' not in g:
-        g.graph_db = Neo4jInterface(url, username, pswd)
+        g.graph_db = Neo4jInterface(current_app.config['GRAPH_DB']['url'], current_app.config['GRAPH_DB']['username'],
+                                    current_app.config['GRAPH_DB']['pswd'])
     return g.graph_db
 
 
 def close_graph_db(e=None):
+    """
+    Close the current connection with neo4j database for each request
+    :param e: Unknown error parameter
+    :return: None
+    """
     try:
         g.pop('graph_db', None).close()
     except AttributeError:

@@ -1,5 +1,6 @@
 from flask import Blueprint, make_response, request, session
-from .db import get_db, get_graph_db
+from .rdb import get_db
+from .gdb import get_graph_db
 
 data_bp = Blueprint('data', __name__, url_prefix='/data')
 
