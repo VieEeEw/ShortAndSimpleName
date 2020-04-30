@@ -29,7 +29,7 @@ Parses a json of the following format:
 
 import json
 import sys
-from rdb import Neo4jInterface
+from gdb import Neo4jInterface
 
 
 
