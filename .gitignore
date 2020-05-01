@@ -25,3 +25,6 @@ build/
 
 # Jetbrain
 .idea/
+
+# Google Maps API Keys
+google_backend.key
