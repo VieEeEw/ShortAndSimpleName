@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS user_crn;
 
 CREATE TABLE user (
     `net_id`    VARCHAR(10) PRIMARY KEY,
@@ -8,11 +9,17 @@ CREATE TABLE user (
     `xpire_t`   TIMESTAMP
 );
 
+CREATE TABLE user_crn (
+    `net_id`    VARCHAR(10) NOT NULL,
+    `crn`       VARCHAR(5) NOT NULL,
+    FOREIGN KEY(`net_id`) REFERENCES user(`net_id`)
+);
 
 CREATE TABLE IF NOT EXISTS vars (
     `var_name`  TEXT PRIMARY KEY,
     `var`       TEXT NOT NULL
 );
+
 DROP TRIGGER IF EXISTS vars_prevent_update;
 DROP TRIGGER IF EXISTS vars_prevent_insert;
 INSERT OR REPLACE INTO vars VALUES ('xpire_gap', '+300 minutes');   -- Should be in that format
@@ -49,6 +56,9 @@ BEGIN
     WHERE "net_id" = NEW.net_id;
 END;
 INSERT INTO user(net_id, pswd, token) VALUES ('ACCESS', '', 'ACCESS_TOKEN');
+
+--
+
 
 -- The following is for demo
 DROP TABLE IF EXISTS courses;
