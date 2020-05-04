@@ -33,7 +33,7 @@ def create_app(test_config=None):
 
     from .bp_auth import auth_bp
     from flask_cors import CORS
-    CORS(auth_bp)
+    CORS(auth_bp, supports_credentials=True, origin=["app.dev.localhost:8080"])
     app.register_blueprint(auth_bp)
 
     @app.route('/')
