@@ -3,4 +3,4 @@ GRAPH_DB = {
     'username': 'neo4j',
     'pswd': 'password'
 }
-SESSION_COOKIE_DOMAIN = "http://localhost:5000"
+SESSION_COOKIE_DOMAIN = "app.dev.localhost"

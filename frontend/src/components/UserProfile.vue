@@ -108,9 +108,12 @@ export default {
       e.preventDefault();
       try {
         // Try to POST the login request 🤞
-        const { data } = await this.axios.post(
-          "http://localhost:5000/auth/login",
-          this.loginForm
+        const {
+          data
+        } = await this.axios.post(
+          "http://app.dev.localhost:5000/auth/login",
+          this.loginForm,
+          { withCredentials: true }
         );
         this.currentUser = {
           name: "John Appleseed",
@@ -126,9 +129,12 @@ export default {
       e.preventDefault();
       try {
         // Try to POST the new user 🤞
-        const { data } = await this.axios.post(
-          "http://localhost:5000/auth/register",
-          this.registerForm
+        const {
+          data
+        } = await this.axios.post(
+          "http://app.dev.localhost:5000/auth/register",
+          this.registerForm,
+          { withCredentials: true }
         );
         this.currentUser = {
           name: this.registerForm.name,
