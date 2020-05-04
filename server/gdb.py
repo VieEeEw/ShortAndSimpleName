@@ -6,7 +6,7 @@ import json
 """
 Initialize an interface with: Neo4j_Interface(URI, USER, PW)
 example: 
-    db = Neo4j_Interface('bolt://localhost:7687', 'neo4j', 'password')
+    db = Neo4jInterface('bolt://localhost:7687', 'neo4j', 'password')
     db.add_course("CS", 411)
 
 See available functions in the Neo4j_Interface() class.
@@ -29,16 +29,24 @@ class Neo4jInterface:
     # -------  ADVANCED FEATURE  ------- #
     def get_intersection(self, steps1, steps2):
         """
-        TODO NOT IMPLEMENTED
         Finds an intersections between 2 paths
-        :param steps1, steps2: dictionaries returned from get_directions
+        :param steps1, steps2: array of steps (see 'steps' key in result of get_directions())
         :return: { 
-            'lat': x, 
-            'long': x 
+            'lat': 40.1036517, 
+            'long': -88.2279429 
         }
         All return fields are NULL if the paths do not intersect
         """
-        pass
+        for s1 in steps1:
+            s1_p1 = (s1['from']['lat'], s1['from']['long'])
+            s1_p2 = (s1['to']['lat'], s1['to']['long'])
+            for s2 in steps2:
+                s2_p1 = (s2['from']['lat'], s2['from']['long'])
+                s2_p2 = (s2['to']['lat'], s2['to']['long'])
+                p = LineTools.line_segment_intersection(s1_p1, s1_p2, s2_p1, s2_p2)
+                if p is not None:
+                    return { 'lat': p[0], 'long': p[1] }
+        return { 'lat': None, 'long': None }
 
     def get_directions(self, building_from, building_to):
         """
@@ -79,7 +87,7 @@ class Neo4jInterface:
         except Exception as e:
             raise(Exception('Unable to read Google Maps API Key for the backend.\nPlease save this key in "server/google_backend.key"'))
 
-        # URL spacing
+        # URL spacing # TODO add ",+UIUC" for localization?
         origin = building_from.replace(' ', '+')
         destination = building_to.replace(' ', '+')
 
@@ -145,7 +153,6 @@ class Neo4jInterface:
 
 
     # -------  ADD DATA TO NEO4J  ------- #
-
     def add_course(self, dept, num):
         with self._driver.session() as session:
             session.write_transaction(self._add_course, dept, str(num))
@@ -228,6 +235,68 @@ class Neo4jInterface:
         tx.run(
             "MATCH (a) "
             "DETACH DELETE a ")
+
+class LineTools:
+    @staticmethod
+    def slope(a, b):
+        '''
+        :param a, b: (x,y) cordinate tuples
+        :return: slope (number)
+        '''
+        # slope = (y2 - y1) / (x2 - x1)
+        dy = b[1] - a[1]
+        dx = b[0] - a[0]
+        if dx == 0:
+            return 999999
+        return dy / dx
+
+    @staticmethod
+    def yintercept(a, slope):
+        '''
+        :param a: (x,y) cordinate tuple
+        :param slope: number
+        :return: y value (number)
+        '''
+        # yintercept = y - mx
+        return a[1] - slope*a[0]
+
+    @staticmethod
+    def line_intersection(a, b, c, d):
+        '''
+        :param a,b,c,d: (x,y) cordinate tuples
+        :return: (x,y) cordinate intersection of the lines ab and cd, or None if no intersection
+        '''
+        # y = mx + b
+        # Y = MX + B
+        # (x=X) = (B - b) / (m - M)
+        slope1 = LineTools.slope(a, b)
+        yint1 = LineTools.yintercept(a, slope1)
+        slope2 = LineTools.slope(c, d)
+        yint2 = LineTools.yintercept(c, slope2)
+
+        if slope1 == slope2: # parallel
+            if yint1 == yint2:  # same line
+                return a
+            return None
+
+        x = (yint2 - yint1) / (slope1 - slope2)
+        y = slope1 * x + yint1
+        return (x, y)
+
+    @staticmethod
+    def line_segment_intersection(a1, a2, b1, b2):
+        '''
+        :param a1,a2,b1,b2: (x,y) cordinate tuples (segment is from a1 to a2, and b1 to b2)
+        :return: (x,y) cordinate intersection of line segments ab and cd, or None if no intersection
+        '''
+        x_rang = a1[0], a2[0]
+        y_rang = a1[1], a2[1]
+        p = LineTools.line_intersection(a1, a2, b1, b2)
+        if p is None:
+            return None
+        if x_rang[0] < p[0] < x_rang[1] and y_rang[0] < p[1] < y_rang[1]:
+            return p
+        return None
 
 
 def get_graph_db():
