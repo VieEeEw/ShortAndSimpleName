@@ -56,6 +56,7 @@ def register():
                        (netid, request.json['name'] if 'name' in request.json else None,
                         generate_password_hash(password), new_token))
             db.commit()
+            session['token'] = new_token
             return make_response({'status': "create successfully"}, 200)
         return make_response({
             'error': error
