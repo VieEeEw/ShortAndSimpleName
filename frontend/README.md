@@ -8,6 +8,17 @@ Install yarn [https://classic.yarnpkg.com/en/docs/cli/install/](https://classic.
 
 `yarn global add @gridsome/cli`
 
+`yarn` in this directory to install/update dependencies
+
+Create a `.env` file to store Google Maps API Key:
+
+```bash
+# .env
+GRIDSOME_GOOGLE_MAPS_KEY=...
+```
+
+or you can run `./run-frontend` in the root directory to automatically populate this file
+
 `yarn develop` to start a local dev server at `http://localhost:8080`
 
 `yarn build` to make a new production build in `static/`
