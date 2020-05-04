@@ -1,4 +1,4 @@
-from flask import Flask, current_app
+from flask import Flask, make_response
 import os
 
 SECRET_KEY = 'dev'
@@ -43,6 +43,8 @@ def create_app(test_config=None):
     # A test end point.
     @app.route('/check-config/<config_name>')
     def test(config_name):
-        return str(app.config[config_name])
+        resp = make_response({"data": str(app.config[config_name])}, 200)
+        resp.set_cookie("Cookie", value='cookie')
+        return resp
 
     return app
