@@ -1,6 +1,9 @@
 # All virtual environments should not be pushed
 venv/
 
+# Environment variables
+.env
+
 # Python cache files
 *.pyc
 __pycache__/
