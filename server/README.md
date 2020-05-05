@@ -17,6 +17,17 @@ Run `conda create --name <env> --file conda-requirements.txt` to build a environ
 Activate conda virtual environment: `conda activate env`\
 ### Letting [PyCharm](https://www.jetbrains.com/pycharm/) doing these
 PyCharm is an IDE that provides extremely powerful support for virtual environment, considering using PyCharm is a good idea.
+
+
+
+### Obtaining the Google Maps API key
+
+In the `server` directory, create the file: `google_backend.key`.
+
+Go to the "random" chat on slack and copy the backend key into it.
+
+
+
 ## Running the server
 ***Be sure to finish setting up the virtual environment and activate it before going in this step***\
 First, in config.py file, set your neo4j url, username and password in GRAPH_DB dictionary variable.\
@@ -54,23 +65,5 @@ python3 json_to_neo4j.py bolt://localhost:7687 neo4j password
 ```
 
 NOTE: this will take several minutes to execute.
-
-
-
-
-
-### BUGS
-
-NOTE: this seems to be fixed by the use of virtual environments
-
-If `flask run` produces a website that crashes and complains about a neo4j module that doesn't exist, run (on Linux)
-
-```
-pip install -r pip-requirements.txt
-python3 -c "import server.__init__ as s; s.create_app().run()"
-```
-
-This will use the Python3 executable associated with pip.
- You may need to replace pip with pip3 above, depending on how you configured your system.
 
 
