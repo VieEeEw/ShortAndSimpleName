@@ -21,13 +21,60 @@ TODO: update ER diagram with digital version and normalized capitalization
 """
 
 
+
 class Neo4jInterface:
 
     def __init__(self, uri, user, password):
         self._driver = GraphDatabase.driver(uri, auth=(user, password), encrypted=False)
 
     # -------  ADVANCED FEATURE  ------- #
-    def get_intersection(self, steps1, steps2):
+    def get_intersection(self, crn_list_1, crn_list_2):
+        '''
+        Finds all possible path intersections between 2 lists of crn enrollments
+        :param crn_list_1 crn_list_2: list of crn numbers (can be strings or numbers)
+        :return:
+        {
+            'intersections': [
+                {
+                    'intersection': {
+                        'lat': 40.1036517, 
+                        'long': -88.2279429,
+                        'time_window': {
+                            'start': '1:50pm',
+                            'end': '2:00pm'
+                        }
+                    },
+                    'student1': {
+                        'crn_from': '61820',
+                        'crn_to': '42069',
+                        'path': [
+                            {
+                                'from': {
+                                    'lat': 40.1036517,
+                                    'long': -88.2279429
+                                },
+                                'to': {
+                                    'lat': 40.10535530000001,
+                                    'long': -88.2279397
+                                },
+                                'seconds': 134  # time taken walking
+                            },
+                            # there may be many path steps here
+                        ]
+                    }
+                    'student2': {
+                        # similar to student1
+                    }
+                }
+            ]
+        }
+        '''
+        # TODO account for time
+        # for crn1_from in crn_list_1:
+        #     for crn1_to in crn_list_1:
+
+
+    def intersect_paths(self, steps1, steps2):
         """
         Finds an intersections between 2 paths
         :param steps1, steps2: array of steps (see 'steps' key in result of get_directions())
@@ -43,14 +90,15 @@ class Neo4jInterface:
             for s2 in steps2:
                 s2_p1 = (s2['from']['lat'], s2['from']['long'])
                 s2_p2 = (s2['to']['lat'], s2['to']['long'])
-                p = LineTools.line_segment_intersection(s1_p1, s1_p2, s2_p1, s2_p2)
+                p = self._line_intersection((s1_p1, s1_p2), (s2_p1, s2_p2))
+                # p = LineTools.line_segment_intersection(s1_p1, s1_p2, s2_p1, s2_p2)
                 if p is not None:
                     return { 'lat': p[0], 'long': p[1] }
         return { 'lat': None, 'long': None }
 
     def get_directions(self, building_from, building_to):
         """
-        Finds a list of gps cords between building_from and building_to
+        Finds a list of gps cords between building_from and building_to, utilizing Google Maps Directions API
         :param building_from, building_to: building name strings (ex. 'Siebel Center for Comp Sci')
         :return: 
                 { 
@@ -236,66 +284,33 @@ class Neo4jInterface:
             "MATCH (a) "
             "DETACH DELETE a ")
 
-class LineTools:
     @staticmethod
-    def slope(a, b):
+    def _line_intersection(line1, line2):
         '''
-        :param a, b: (x,y) cordinate tuples
-        :return: slope (number)
+        Find the intersection of 2 line segments
+        :param line1, line2: tuple of cordinate tuples; ex. ( (0,1), (2,2) )
+        :return: (x,y) cordinate, or None if no intersection
         '''
-        # slope = (y2 - y1) / (x2 - x1)
-        dy = b[1] - a[1]
-        dx = b[0] - a[0]
-        if dx == 0:
-            return 999999
-        return dy / dx
+        x_diff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+        y_diff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
-    @staticmethod
-    def yintercept(a, slope):
-        '''
-        :param a: (x,y) cordinate tuple
-        :param slope: number
-        :return: y value (number)
-        '''
-        # yintercept = y - mx
-        return a[1] - slope*a[0]
+        def det(a, b):
+            return a[0] * b[1] - a[1] * b[0]
 
-    @staticmethod
-    def line_intersection(a, b, c, d):
-        '''
-        :param a,b,c,d: (x,y) cordinate tuples
-        :return: (x,y) cordinate intersection of the lines ab and cd, or None if no intersection
-        '''
-        # y = mx + b
-        # Y = MX + B
-        # (x=X) = (B - b) / (m - M)
-        slope1 = LineTools.slope(a, b)
-        yint1 = LineTools.yintercept(a, slope1)
-        slope2 = LineTools.slope(c, d)
-        yint2 = LineTools.yintercept(c, slope2)
-
-        if slope1 == slope2: # parallel
-            if yint1 == yint2:  # same line
-                return a
+        div = det(x_diff, y_diff)
+        if div == 0:
             return None
 
-        x = (yint2 - yint1) / (slope1 - slope2)
-        y = slope1 * x + yint1
-        return (x, y)
+        d = (det(*line1), det(*line2))
+        x = det(d, x_diff) / div
+        y = det(d, y_diff) / div
 
-    @staticmethod
-    def line_segment_intersection(a1, a2, b1, b2):
-        '''
-        :param a1,a2,b1,b2: (x,y) cordinate tuples (segment is from a1 to a2, and b1 to b2)
-        :return: (x,y) cordinate intersection of line segments ab and cd, or None if no intersection
-        '''
-        x_rang = a1[0], a2[0]
-        y_rang = a1[1], a2[1]
-        p = LineTools.line_intersection(a1, a2, b1, b2)
-        if p is None:
-            return None
-        if x_rang[0] < p[0] < x_rang[1] and y_rang[0] < p[1] < y_rang[1]:
-            return p
+        # additional checks for line segment
+        x_rang = (line1[0][0], line1[1][0])
+        y_rang = (line1[0][1], line1[1][1])
+
+        if min(x_rang) < x < max(x_rang) and min(y_rang) < y < max(y_rang):
+            return (x, y)
         return None
 
 
@@ -324,3 +339,5 @@ def close_graph_db(e=None):
 
 def register_graph_db(app):
     app.teardown_appcontext(close_graph_db)
+
+    
