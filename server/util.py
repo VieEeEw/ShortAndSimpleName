@@ -24,7 +24,7 @@ def validate_token(db, netid, token, check_pswd=False, password=None) -> Tuple[i
     if meta is None:
         return 403, 'Cannot find current user'
     s_token, e_time, pswd_hash = meta
-    if s_token is None or e_time > datetime.utcnow():
+    if s_token is None or e_time < datetime.utcnow():
         return 401, 'Token expired.'
     elif s_token != token:
         return 401, 'Invalid token.'
