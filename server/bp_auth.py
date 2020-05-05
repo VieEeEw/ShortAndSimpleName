@@ -33,11 +33,9 @@ def login():
                 db.execute("UPDATE user SET token = ? WHERE net_id = ?",
                            (token, netid))
             session['token'] = token
-            resp = make_response({
+            return make_response({
                 'status': "Login successfully"
             }, 200)
-            resp.set_cookie('token', token)
-            return resp
         return make_response({
             'error': error
         }, 403)
@@ -60,9 +58,7 @@ def register():
                         generate_password_hash(password), new_token))
             db.commit()
             session['token'] = new_token
-            resp = make_response({'status': "create successfully"}, 200)
-            resp.set_cookie('token', new_token)
-            return resp
+            return make_response({'status': "create successfully"}, 200)
         return make_response({
             'error': error
         }, 403)
