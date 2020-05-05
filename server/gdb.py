@@ -22,7 +22,6 @@ TODO: update ER diagram with digital version and normalized capitalization
 """
 
 
-
 class Neo4jInterface:
 
     def __init__(self, uri, user, password):
@@ -30,7 +29,7 @@ class Neo4jInterface:
 
     # -------  ADVANCED FEATURE  ------- #
     def get_intersection(self, crn_list_1, crn_list_2):
-        '''
+        """
         Finds all possible path intersections between 2 lists of crn enrollments
         :param crn_list_1 crn_list_2: list of crn numbers (can be strings or numbers)
         :return:
@@ -79,8 +78,8 @@ class Neo4jInterface:
                 }
             ]
         }
-        '''
-        json_ret = { 'intersections': [] }
+        """
+        json_ret = {'intersections': []}
         meetings1 = self._get_meetings(crn_list_1)
         meetings2 = self._get_meetings(crn_list_2)
 
@@ -100,7 +99,7 @@ class Neo4jInterface:
                 intersect = self.intersect_paths(dir1['steps'], dir2['steps'])
                 if intersect['intersects']:
                     # we found an intersection!
-                    json_i = { 
+                    json_i = {
                         'intersection': {
                             'lat': intersect['lat'],
                             'long': intersect['long'],
@@ -119,12 +118,11 @@ class Neo4jInterface:
                     json_ret['intersections'].append(json_i)
         return json_ret
 
-
-
     def intersect_paths(self, steps1, steps2):
         """
         Finds an intersections between 2 paths
-        :param steps1, steps2: array of steps (see 'steps' key in result of get_directions())
+        :param steps1: array of steps (see 'steps' key in result of get_directions()).
+        :param steps2: Same as :param step1.
         :return: { 
             'intersects': true
             'lat': 40.1036517, 
@@ -139,13 +137,14 @@ class Neo4jInterface:
                 s2_p2 = (s2['to']['lat'], s2['to']['long'])
                 p = self._line_intersection((s1_p1, s1_p2), (s2_p1, s2_p2))
                 if p is not None:
-                    return { 'intersects': True, 'lat': p[0], 'long': p[1] }
-        return { 'intersects': False, 'lat': None, 'long': None }
+                    return {'intersects': True, 'lat': p[0], 'long': p[1]}
+        return {'intersects': False, 'lat': None, 'long': None}
 
     def get_directions(self, building_from, building_to):
         """
         Finds a list of gps cords between building_from and building_to, utilizing Google Maps Directions API
-        :param building_from, building_to: building name strings (ex. 'Siebel Center for Comp Sci')
+        :param building_from: building name strings (ex. 'Siebel Center for Comp Sci')
+        :param building_to: See :param building_from
         :return: 
                 { 
                     'success': True
@@ -174,12 +173,15 @@ class Neo4jInterface:
                     },  
                 }
         """
-        json_ret = { 'steps': [], 'start_address': None, 'start_location': None, 'end_address': None, 'end_location': None, 'success': False }
+        json_ret = {'steps': [], 'start_address': None, 'start_location': None, 'end_address': None,
+                    'end_location': None, 'success': False}
         try:
             with open('google_backend.key', 'r') as f:
                 api_key = f.read()
-        except Exception as e:
-            raise(Exception('Unable to read Google Maps API Key for the backend.\nPlease save this key in "server/google_backend.key"'))
+        except Exception:
+            raise (FileNotFoundError(
+                'Unable to read Google Maps API Key for the backend.\n'
+                'Please save this key in "server/google_backend.key"'))
 
         # URL spacing # TODO add ",+UIUC" for localization?
         origin = building_from.replace(' ', '+')
@@ -195,27 +197,28 @@ class Neo4jInterface:
             routes = directions['routes']
             route = routes[0]  # defaulting to first route; if there are no routes, will throw exception
             leg = route['legs'][0]  # defaulting to closest match of locations
-            
+
             json_ret['start_address'] = leg['start_address']
             json_ret['start_location'] = leg['start_location']
             json_ret['end_address'] = leg['end_address']
             json_ret['end_location'] = leg['end_location']
             for step in leg['steps']:
-                json_ret['steps'].append( {
-                    'from': { 
-                        'lat': step['start_location']['lat'], 
-                        'long': step['start_location']['lng'], 
-                        },
-                    'to': { 
-                        'lat': step['end_location']['lat'], 
-                        'long': step['end_location']['lng'], 
-                        },
+                json_ret['steps'].append({
+                    'from': {
+                        'lat': step['start_location']['lat'],
+                        'long': step['start_location']['lng'],
+                    },
+                    'to': {
+                        'lat': step['end_location']['lat'],
+                        'long': step['end_location']['lng'],
+                    },
                     'seconds': step['duration']['value']
                 })
             json_ret['success'] = True
-        except:
+        except Exception as e:
             json_ret['success'] = False
-            print('BAD RESPONSE FROM GOOGLE MAPS\n(bad api key? bad internet?)')
+            print(f'Got an error of type {type(e)} and message {e}'
+                  f'(BAD RESPONSE FROM GOOGLE MAPS\bad api key? bad internet?)')
         return json_ret
 
     # -------  GET DATA FROM NEO4J  ------- #
@@ -269,8 +272,8 @@ class Neo4jInterface:
 
     # -------  Helper Functions  ------- #
     def _get_meetings(self, crn_list):
-        '''
-        conver list of crns into list of meeting dictionaries
+        """
+        Cover list of CRNs into list of meeting dictionaries
         each dictionary gets a new key: 'crn'
         :return:
             [{
@@ -281,7 +284,7 @@ class Neo4jInterface:
                 'days': 'MW',
                 'crn': '66935'
             }]
-        '''
+        """
         meetings = []
         for crn in crn_list:
             crn_meetings = self.get_crn_data(crn)['meetings']
@@ -292,11 +295,11 @@ class Neo4jInterface:
 
     @staticmethod
     def _line_intersection(line1, line2):
-        '''
+        """
         Find the intersection of 2 line segments
-        :param line1, line2: tuple of cordinate tuples; ex. ( (0,1), (2,2) )
-        :return: (x,y) cordinate, or None if no intersection
-        '''
+        :param line1, line2: tuple of coordinate tuples; ex. ( (0,1), (2,2) )
+        :return: (x,y) coordinate, or None if no intersection
+        """
         x_diff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
         y_diff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
@@ -316,7 +319,7 @@ class Neo4jInterface:
         y_rang = (line1[0][1], line1[1][1])
 
         if min(x_rang) < x < max(x_rang) and min(y_rang) < y < max(y_rang):
-            return (x, y)
+            return x, y
         return None
 
     # -------  Transaction methods for Neo4j  ------- #
@@ -382,7 +385,7 @@ class Neo4jInterface:
             "DETACH DELETE a ")
 
 
-def get_graph_db():
+def get_graph_db() -> Neo4jInterface:
     """
     Create an connection with neo4j database for each request.
     :return: The neo4j database (An instance of Neo4jInterface)
@@ -408,9 +411,6 @@ def close_graph_db(e=None):
 def register_graph_db(app):
     app.teardown_appcontext(close_graph_db)
 
-
-
-
 # if __name__ == "__main__":
 #     db = Neo4jInterface('bolt://localhost:7687', 'neo4j', 'password')
 #     dir1 = db.get_directions('Loomis Laboratory', "Materials Science & Eng Bld")
@@ -420,4 +420,3 @@ def register_graph_db(app):
 #     crn_list_2 = [47191, 31352]  # transportation to natural history
 #     res = db.get_intersection(crn_list_1, crn_list_2)
 #     print(res)
-    

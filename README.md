@@ -15,7 +15,4 @@ Linux/Mac OS: run `./run-frontend.sh`.
 Windows: run `run-frontend.bat`.
 
 ## Server endpoint
-Index: /\
-Login: /auth/login\
-Register: /auth/register\
 Adding...

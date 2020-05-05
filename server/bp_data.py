@@ -22,3 +22,8 @@ def course_dispatch(subject, number):
 @data_bp.route('/courses', methods=['GET'])
 def courses():
     return get_graph_db().get_all_courses()
+
+
+@data_bp.route('/intersection', methods=['GET'])
+def intersection():
+    return get_graph_db().get_intersection(request.json['bl1'], request.json['bl2'])
