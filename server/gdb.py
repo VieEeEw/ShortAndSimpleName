@@ -215,7 +215,7 @@ class Neo4jInterface:
             json_ret['success'] = True
         except:
             json_ret['success'] = False
-            print('BAD RESPONSE FROM GOOGLE MAPS')  # bad api key, bad internet, or Google json missing attributes 
+            print('BAD RESPONSE FROM GOOGLE MAPS\n(bad api key? bad internet?)')
         return json_ret
 
     # -------  GET DATA FROM NEO4J  ------- #
