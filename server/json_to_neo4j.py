@@ -17,7 +17,8 @@ Parses a json of the following format:
                             'building': 'Siebel',
                             'room': '234',
                             'start': '9:00am',
-                            'end': '9:50am'
+                            'end': '9:50am',
+                            'days': 'MW'
                         }
                     ]
                 }
@@ -49,7 +50,7 @@ if __name__ == '__main__':
                     db.add_section(course['department'], course['course_num'], section['crn'])
                     for meeting in section['meetings']:
                         if meeting['building'] is not None:
-                            db.add_meeting(section['crn'], meeting['start'], meeting['end'], meeting['building'], meeting['room'])
+                            db.add_meeting(section['crn'], meeting['start'], meeting['end'], meeting['building'], meeting['room'], meeting['days'])
         print('Done!')
     except Exception as e:
         print('Make sure "cisdata.json" is in this directory, and the Neo4j command line arguments are correct.')
