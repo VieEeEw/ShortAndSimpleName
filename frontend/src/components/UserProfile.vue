@@ -58,9 +58,18 @@
         </md-tabs>
       </div>
     </div>
-    <div class="profile-buttons"></div>
+    <div class="profile-buttons">
+      <div v-if="isLoggedIn" class="loginOptsContainer">
+        <div v-on:click="deleteUser" class="icon-button">
+          <md-icon>delete_outline</md-icon>
+        </div>
+        <div class="icon-button">
+          <md-icon>edit</md-icon>
+        </div>
+      </div>
+    </div>
     <div class="profile-signout">
-      <div v-if="isLoggedIn" style="position: relative; height:30px;">
+      <div v-if="isLoggedIn" style="position: relative; height:100%;">
         <div class="center">
           <md-button @click="logoutUser" style="border: 1px solid rgba(0,0,0,0.05);">Sign out</md-button>
         </div>
@@ -125,6 +134,19 @@ export default {
         alert(err.response.data.error);
       }
     },
+    async deleteUser(e) {
+      e.preventDefault();
+      try {
+        await this.axios.post(
+          "http://app.dev.localhost:5000/auth/delete",
+          { net_id: this.currentUser.net_id },
+          { withCredentials: true }
+        );
+        this.logoutUser();
+      } catch (err) {
+        alert(err.response.data.error);
+      }
+    },
     async registerUser(e) {
       e.preventDefault();
       try {
@@ -158,6 +180,28 @@ export default {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.icon-button {
+  opacity: 0.75;
+  box-sizing: border-box;
+  padding: 10px;
+  margin-right: 10px !important;
+  background-color: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.loginOptsContainer {
+  display: grid;
+  width: 100%;
+  grid-template: 1fr / min-content min-content 1fr;
+}
+
 .profile-container {
   position: relative;
   display: grid;
