@@ -2,6 +2,7 @@ from neo4j import GraphDatabase
 from flask import current_app, g
 import urllib.request
 import json
+from itertools import permutations
 
 """
 Initialize an interface with: Neo4j_Interface(URI, USER, PW)
@@ -47,7 +48,8 @@ class Neo4jInterface:
                     'student1': {
                         'crn_from': '61820',
                         'crn_to': '42069',
-                        'path': [
+                        'success': True,  # if Google API succeeded
+                        'steps': [
                             {
                                 'from': {
                                     'lat': 40.1036517,
@@ -59,8 +61,17 @@ class Neo4jInterface:
                                 },
                                 'seconds': 134  # time taken walking
                             },
-                            # there may be many path steps here
-                        ]
+                        ],
+                        'start_address': 'David Kinley Hall, 1407 W Gregory Dr, Urbana, IL 61801, USA',
+                        'start_location': {
+                            'lat': 40.1036517,
+                            'lng': -88.2279429
+                        },
+                        'end_address': '201 N Goodwin Ave, Urbana, IL 61801, USA',
+                        'end_location': {
+                            'lat': 40.1138291,
+                            'lng': -88.2256426
+                        },  
                     }
                     'student2': {
                         # similar to student1
@@ -69,9 +80,45 @@ class Neo4jInterface:
             ]
         }
         '''
-        # TODO account for time
-        # for crn1_from in crn_list_1:
-        #     for crn1_to in crn_list_1:
+        json_ret = { 'intersections': [] }
+        meetings1 = self._get_meetings(crn_list_1)
+        meetings2 = self._get_meetings(crn_list_2)
+
+        paths1 = permutations(meetings1, 2)
+        paths2 = permutations(meetings2, 2)
+
+        for path1 in paths1:
+            dir1 = self.get_directions(path1[0]['building'], path1[1]['building'])
+            if not dir1['success']:
+                continue
+            for path2 in paths2:
+                # TODO account for date/time
+                # TODO cache res in dict
+                dir2 = self.get_directions(path2[0]['building'], path2[1]['building'])
+                if not dir2['success']:
+                    continue
+                intersect = self.intersect_paths(dir1['steps'], dir2['steps'])
+                if intersect['intersects']:
+                    # we found an intersection!
+                    json_i = { 
+                        'intersection': {
+                            'lat': intersect['lat'],
+                            'long': intersect['long'],
+                            'time_window': {
+                                'start': 'TBD',
+                                'end': 'TBD'
+                            }
+                        },
+                        'student1': dir1,
+                        'student2': dir2
+                    }
+                    json_i['student1']['crn_from'] = path1[0]['crn']
+                    json_i['student1']['crn_to'] = path1[1]['crn']
+                    json_i['student2']['crn_from'] = path2[0]['crn']
+                    json_i['student2']['crn_to'] = path2[1]['crn']
+                    json_ret['intersections'].append(json_i)
+        return json_ret
+
 
 
     def intersect_paths(self, steps1, steps2):
@@ -79,10 +126,10 @@ class Neo4jInterface:
         Finds an intersections between 2 paths
         :param steps1, steps2: array of steps (see 'steps' key in result of get_directions())
         :return: { 
+            'intersects': true
             'lat': 40.1036517, 
             'long': -88.2279429 
         }
-        All return fields are NULL if the paths do not intersect
         """
         for s1 in steps1:
             s1_p1 = (s1['from']['lat'], s1['from']['long'])
@@ -91,10 +138,9 @@ class Neo4jInterface:
                 s2_p1 = (s2['from']['lat'], s2['from']['long'])
                 s2_p2 = (s2['to']['lat'], s2['to']['long'])
                 p = self._line_intersection((s1_p1, s1_p2), (s2_p1, s2_p2))
-                # p = LineTools.line_segment_intersection(s1_p1, s1_p2, s2_p1, s2_p2)
                 if p is not None:
-                    return { 'lat': p[0], 'long': p[1] }
-        return { 'lat': None, 'long': None }
+                    return { 'intersects': True, 'lat': p[0], 'long': p[1] }
+        return { 'intersects': False, 'lat': None, 'long': None }
 
     def get_directions(self, building_from, building_to):
         """
@@ -184,10 +230,11 @@ class Neo4jInterface:
                     'building': 'Gregory Hall', 
                     'room': '307', 
                     'start': '11:00 AM', 
-                    'end': '11:50 AM'
+                    'end': '11:50 AM',
+                    'days': 'MW'
                 }
             ]}
-        All fields except 'crn' are populated with NULLs if the course not found
+        All fields except 'crn' are populated with NULLs if the course not found, and meetings is the empty list
         """
         with self._driver.session() as session:
             return session.write_transaction(self._get_crn_data, str(crn))
@@ -199,7 +246,6 @@ class Neo4jInterface:
         with self._driver.session() as session:
             return session.write_transaction(self._count_nodes)
 
-
     # -------  ADD DATA TO NEO4J  ------- #
     def add_course(self, dept, num):
         with self._driver.session() as session:
@@ -209,80 +255,40 @@ class Neo4jInterface:
         with self._driver.session() as session:
             session.write_transaction(self._add_section, dept, str(num), str(crn))
 
-    def add_meeting(self, crn, start, end, building, room):
+    def add_meeting(self, crn, start, end, building, room, days):
         with self._driver.session() as session:
-            session.write_transaction(self._add_meeting, str(crn), start, end, building, str(room))
+            session.write_transaction(self._add_meeting, str(crn), start, end, building, str(room), days)
 
     # -------  DELETE FROM NEO4J  ------- #
     def delete_all(self):
         with self._driver.session() as session:
             session.write_transaction(self._delete_all)
 
-    # close the driver
     def close(self):
         self._driver.close()
 
-
-    # internal helper methods:
-    @staticmethod
-    def _get_crn_data(tx, crn):
-        result = tx.run(
-            "MATCH (c:Course)<-[:SectionOf]-(s:Section)<-[:MeetsFor]-(m:Meeting)-[:LocatedAt]->(b:Building) "
-            "WHERE s.crn = $crn "
-            "RETURN c, s, m, b",
-            crn=crn)
-        json_ret = {'crn': crn, 'dept': None, 'course_num': None, 'meetings': []}
-        for record in result.records():
-            course = record['c']
-            json_ret['dept'] = course.get('dept')
-            json_ret['course_num'] = course.get('num')
-
-            meeting = record['m']
-            building = record['b']
-            json_ret['meetings'].append(
-                {
-                    'building': building.get('name'),
-                    'room': meeting.get('room'),
-                    'start': meeting.get('start'),
-                    'end': meeting.get('end')
-                })
-        return json_ret
-
-    @staticmethod
-    def _count_nodes(tx):
-        result = tx.run("MATCH (a) "
-                        "RETURN a")
-        return str(len([i for i in result.records()]))
-
-    @staticmethod
-    def _add_course(tx, dept, num):
-        tx.run(
-            "CREATE (c:Course { dept: $dept, num: $num }) ",
-            dept=dept, num=num)
-
-    @staticmethod
-    def _add_section(tx, dept, num, crn):
-        tx.run(
-            "MATCH (c:Course) WHERE c.dept = $dept AND c.num = $num "
-            "CREATE (s:Section { crn: $crn }) "
-            "CREATE (s)-[:SectionOf]->(c)",
-            dept=dept, num=num, crn=crn)
-
-    @staticmethod
-    def _add_meeting(tx, crn, start, end, building, room):
-        tx.run(
-            "MATCH (s:Section) WHERE s.crn = $crn "
-            "CREATE (m:Meeting { room: $room, start: $start, end: $end }) "
-            "MERGE (b:Building { name: $building }) "
-            "CREATE (m)-[:MeetsFor]->(s) "
-            "CREATE (m)-[:LocatedAt]->(b)",
-            crn=crn, room=room, start=start, end=end, building=building)
-
-    @staticmethod
-    def _delete_all(tx):
-        tx.run(
-            "MATCH (a) "
-            "DETACH DELETE a ")
+    # -------  Helper Functions  ------- #
+    def _get_meetings(self, crn_list):
+        '''
+        conver list of crns into list of meeting dictionaries
+        each dictionary gets a new key: 'crn'
+        :return:
+            [{
+                'building': 'Gregory Hall', 
+                'room': '307', 
+                'start': '11:00 AM', 
+                'end': '11:50 AM',
+                'days': 'MW',
+                'crn': '66935'
+            }]
+        '''
+        meetings = []
+        for crn in crn_list:
+            crn_meetings = self.get_crn_data(crn)['meetings']
+            for meeting in crn_meetings:
+                meeting['crn'] = str(crn)
+            meetings += crn_meetings
+        return meetings
 
     @staticmethod
     def _line_intersection(line1, line2):
@@ -313,6 +319,68 @@ class Neo4jInterface:
             return (x, y)
         return None
 
+    # -------  Transaction methods for Neo4j  ------- #
+    @staticmethod
+    def _get_crn_data(tx, crn):
+        result = tx.run(
+            "MATCH (c:Course)<-[:SectionOf]-(s:Section)<-[:MeetsFor]-(m:Meeting)-[:LocatedAt]->(b:Building) "
+            "WHERE s.crn = $crn "
+            "RETURN c, s, m, b",
+            crn=crn)
+        json_ret = {'crn': crn, 'dept': None, 'course_num': None, 'meetings': []}
+        for record in result.records():
+            course = record['c']
+            json_ret['dept'] = course.get('dept')
+            json_ret['course_num'] = course.get('num')
+
+            meeting = record['m']
+            building = record['b']
+            json_ret['meetings'].append(
+                {
+                    'building': building.get('name'),
+                    'room': meeting.get('room'),
+                    'start': meeting.get('start'),
+                    'end': meeting.get('end'),
+                    'days': meeting.get('days')
+                })
+        return json_ret
+
+    @staticmethod
+    def _count_nodes(tx):
+        result = tx.run("MATCH (a) "
+                        "RETURN a")
+        return str(len([i for i in result.records()]))
+
+    @staticmethod
+    def _add_course(tx, dept, num):
+        tx.run(
+            "CREATE (c:Course { dept: $dept, num: $num }) ",
+            dept=dept, num=num)
+
+    @staticmethod
+    def _add_section(tx, dept, num, crn):
+        tx.run(
+            "MATCH (c:Course) WHERE c.dept = $dept AND c.num = $num "
+            "CREATE (s:Section { crn: $crn }) "
+            "CREATE (s)-[:SectionOf]->(c)",
+            dept=dept, num=num, crn=crn)
+
+    @staticmethod
+    def _add_meeting(tx, crn, start, end, building, room, days):
+        tx.run(
+            "MATCH (s:Section) WHERE s.crn = $crn "
+            "CREATE (m:Meeting { room: $room, start: $start, end: $end, days: $days }) "
+            "MERGE (b:Building { name: $building }) "
+            "CREATE (m)-[:MeetsFor]->(s) "
+            "CREATE (m)-[:LocatedAt]->(b)",
+            crn=crn, room=room, start=start, end=end, building=building, days=days)
+
+    @staticmethod
+    def _delete_all(tx):
+        tx.run(
+            "MATCH (a) "
+            "DETACH DELETE a ")
+
 
 def get_graph_db():
     """
@@ -340,4 +408,16 @@ def close_graph_db(e=None):
 def register_graph_db(app):
     app.teardown_appcontext(close_graph_db)
 
+
+
+
+# if __name__ == "__main__":
+#     db = Neo4jInterface('bolt://localhost:7687', 'neo4j', 'password')
+#     dir1 = db.get_directions('Loomis Laboratory', "Materials Science & Eng Bld")
+#     dir2 = db.get_directions("Transportation Building", "Natural History Building")
+#     intr = db.intersect_paths(dir1['steps'],dir2['steps'])
+#     crn_list_1 = [66935, 65314]  # loomis to material science
+#     crn_list_2 = [47191, 31352]  # transportation to natural history
+#     res = db.get_intersection(crn_list_1, crn_list_2)
+#     print(res)
     
