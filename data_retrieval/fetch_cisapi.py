@@ -26,7 +26,8 @@ example = {
                             'building': 'Siebel',
                             'room': '234',
                             'start': '9:00am',
-                            'end': '9:50am'
+                            'end': '9:50am',
+                            'days': 'MW'
                         }
                     ]
                 }
@@ -126,10 +127,12 @@ def parse_course(link):
     if match is None:
         match = re.match(r'.*Prerequisite.*', str(soup), re.IGNORECASE)  
         if match is not None:
-            log_error(f'NOTE: \n{link}\n has "Prerequisite" without a period or different case')
+            # log_error(f'NOTE: \n{link}\n has "Prerequisite" without a period or different case')
+            pass
         match = re.match(r'.*concurrent.*', str(soup), re.IGNORECASE)
         if match is not None:
-            log_error(f'NOTE: \n{link}\n has "concurrent" without a Prerequisite')
+            # log_error(f'NOTE: \n{link}\n has "concurrent" without a Prerequisite')
+            pass
     
     return course_dict
 
@@ -148,7 +151,7 @@ def parse_section(link):
     if soup.sectionnumber is not None:
         section_dict['section'] = soup.sectionnumber.text
     for meeting in soup.find_all('meeting'):
-        meeting_dict = { 'building': None, 'room': None, 'start': None, 'end': None }
+        meeting_dict = { 'building': None, 'room': None, 'start': None, 'end': None, 'days': None }
         if meeting.buildingname is not None:
             meeting_dict['building'] = meeting.buildingname.text
         if meeting.roomnumber is not None:
@@ -157,6 +160,8 @@ def parse_section(link):
             meeting_dict['start'] = meeting.start.text
         if meeting.end is not None:
             meeting_dict['end'] = meeting.end.text
+        if meeting.daysoftheweek is not None:
+            meeting_dict['days'] = meeting.daysoftheweek.text
         section_dict['meetings'].append(meeting_dict)
     return section_dict
 
