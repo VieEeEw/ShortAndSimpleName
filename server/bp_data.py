@@ -51,9 +51,8 @@ def crn():
             rdb.commit()
         return make_response({'status': 'add successfully'}, 200)
     elif request.method == 'DELETE':
-        for CRN in set(request.json['crns']):
-            rdb.execute("DELETE FROM user_crn WHERE net_id=? AND crn=?", (netid, CRN))
-            rdb.commit()
+        rdb.execute("DELETE FROM user_crn WHERE net_id=?", (netid, ))
+        rdb.commit()
         return make_response({'status': 'delete successfully'}, 200)
 
 
