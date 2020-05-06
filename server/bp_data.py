@@ -33,6 +33,30 @@ def courses():
     return get_graph_db().get_all_courses()
 
 
+@data_bp.route('/crn', methods=['GET', 'POST', 'DELETE'])
+def crn():
+    rdb = get_db()
+    netid = request.json['net_id']
+    code, msg = validate_token(rdb, netid, session['token'])
+    if code != 200:
+        return make_response({'error': msg}, code)
+    if request.method == 'GET':
+        return rdb.execute("SELECT `crn` FROM `user_crn` WHERE net_id=?", (netid,)).fetchall()
+    elif request.method == 'POST':
+        ls = rdb.execute("SELECT `crn` FROM `user_crn` WHERE net_id=?", (netid,)).fetchall()
+        for CRN in request.json['crns']:
+            if CRN in ls:
+                continue
+            rdb.execute("INSERT INTO user_crn(net_id, crn) VALUES(?, ?)", (netid, CRN))
+            rdb.commit()
+        return make_response({'status': 'add successfully'}, 200)
+    elif request.method == 'DELETE':
+        for CRN in request.json['crns']:
+            rdb.execute("DELETE FROM user_crn WHERE net_id=? AND crn=?", (netid, CRN))
+            rdb.commit()
+        return make_response({'status': 'delete successfully'}, 200)
+
+
 @data_bp.route('/intersection', methods=['POST'])
 def intersection():
     return get_graph_db().get_intersection(request.json['bl1'], request.json['bl2'])

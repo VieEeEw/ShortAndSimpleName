@@ -12,7 +12,8 @@ CREATE TABLE user (
 CREATE TABLE user_crn (
     `net_id`    VARCHAR(10) NOT NULL,
     `crn`       VARCHAR(5) NOT NULL,
-    FOREIGN KEY(`net_id`) REFERENCES user(`net_id`)
+    FOREIGN KEY(`net_id`) REFERENCES user(`net_id`),
+    PRIMARY KEY (net_id, crn)
 );
 
 CREATE TABLE IF NOT EXISTS vars (
