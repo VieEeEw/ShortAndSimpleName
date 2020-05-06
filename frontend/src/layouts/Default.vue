@@ -7,7 +7,9 @@
           :class="{ 'main-drawer-toggle-inactive': menuClosed }"
           class="main-drawer-toggle material-icons"
         />
-        <div style="box-sizing:border-box; padding:10px 30px; margin-top:15px;">
+        <div
+          style="box-sizing:border-box; padding:10px 30px; margin-top:15px; overflow-y:auto; height:100%;"
+        >
           <slot />
         </div>
         <div v-if="isMobile" class="user-profile-docker">
