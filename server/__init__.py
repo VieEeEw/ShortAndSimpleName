@@ -32,8 +32,10 @@ def create_app(test_config=None):
     register_graph_db(app)
 
     from .bp_auth import auth_bp
+    from .bp_data import data_bp
     from flask_cors import CORS
     CORS(auth_bp, supports_credentials=True, origin=["app.dev.localhost:8080"])
+    CORS(data_bp, supports_credentials=True, origin=["app.dev.localhost:8080"])
     app.register_blueprint(auth_bp)
 
     @app.route('/')
