@@ -57,7 +57,7 @@ body {
   display: grid;
   width: 100%;
   height: 100%;
-  grid-template: "drawer map" 1fr / 450px 1fr;
+  grid-template: "drawer map" 1fr / 550px 1fr;
 }
 
 .layout-inactive {

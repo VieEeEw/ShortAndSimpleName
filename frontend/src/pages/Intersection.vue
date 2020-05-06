@@ -26,6 +26,21 @@
         type="submit"
       >Calculate High-Five</md-button>
     </form>
+    <md-button
+      v-on:click="recordFavorites"
+      class="md-raised"
+      style="width:100%; position:relative; left:-10px;"
+    >Save my classes</md-button>
+    <md-button
+      v-on:click="fetchFavorites"
+      class="md-raised"
+      style="width:100%; position:relative; left:-10px;"
+    >Load my favorites</md-button>
+    <md-button
+      v-on:click="deleteFavorites"
+      class="md-raised"
+      style="width:100%; position:relative; left:-10px;"
+    >Clear my favorites</md-button>
     <div class="response-text">{{this.error}}</div>
   </Layout>
 </template>
@@ -63,6 +78,48 @@ export default {
     }, 100);
   },
   methods: {
+    async fetchFavorites(e) {
+      e.preventDefault();
+      try {
+        const { data } = await this.axios.get(
+          "http://app.dev.localhost:5000/data/crn",
+          {
+            withCredentials: true
+          }
+        );
+        this.bl1 = [...new Set([...this.bl1, ...data.crns])];
+      } catch (err) {
+        alert("Please login");
+      }
+    },
+    async deleteFavorites(e) {
+      e.preventDefault();
+      try {
+        const { data } = await this.axios.delete(
+          "http://app.dev.localhost:5000/data/crn",
+          {
+            withCredentials: true
+          }
+        );
+        this.bl1 = [];
+      } catch (err) {
+        alert("Please login");
+      }
+    },
+    async recordFavorites(e) {
+      e.preventDefault();
+      try {
+        const { data } = await this.axios.post(
+          "http://app.dev.localhost:5000/data/crn",
+          {
+            crns: this.bl1.filter(crn => crn !== null).map(crn => Number(crn))
+          },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        alert("Please login");
+      }
+    },
     async plotIntersection(e) {
       e.preventDefault();
       this.error = "";
