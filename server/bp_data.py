@@ -40,7 +40,7 @@ def crn():
     if code != 200:
         return make_response({'error': msg}, code)
     if request.method == 'GET':
-        return make_response({'crns': rdb.execute("SELECT `crn` FROM `user_crn` WHERE net_id=?", (netid,)).fetchall()},
+        return make_response({'crns': [i[0] for i in rdb.execute("SELECT `crn` FROM `user_crn` WHERE net_id=?", (netid,)).fetchall()]},
                              200)
     elif request.method == 'POST':
         ls = rdb.execute("SELECT `crn` FROM `user_crn` WHERE net_id=?", (netid,)).fetchall()

@@ -48,7 +48,7 @@ def register_db(app):
 
 if __name__ == '__main__':
     db = sqlite3.connect(
-        './server.sqlite',
+        '../instance/server.sqlite',
         detect_types=sqlite3.PARSE_DECLTYPES
     )
-    print(db.executescript("SELECT * FROM `user`").fetchall())
+    print(db.execute("SELECT `crn` FROM `user_crn` WHERE net_id='yifei'").fetchall())
