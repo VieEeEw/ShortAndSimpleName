@@ -65,7 +65,7 @@ export default {
   methods: {
     async plotIntersection(e) {
       e.preventDefault();
-      console.log(this);
+      this.error = "";
       this.markers = [];
       this.paths = [];
       try {
