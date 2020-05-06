@@ -21,6 +21,7 @@ TODO: update ER diagram with digital version and normalized capitalization
 
 """
 
+
 class Neo4jInterface:
 
     def __init__(self, uri, user, password):
@@ -108,9 +109,9 @@ class Neo4jInterface:
 
                 intersection = self.intersect_paths(dir1['steps'], dir2['steps'])
                 if intersection['intersects']:  # we found an intersection!
-                    json_i = self._make_intersection_json(intersection, 
-                        (dir1, path1[0]['crn'], path1[1]['crn'], time_window1), 
-                        (dir2, path2[0]['crn'], path2[1]['crn'], time_window2))
+                    json_i = self._make_intersection_json(intersection,
+                                                          (dir1, path1[0]['crn'], path1[1]['crn'], time_window1),
+                                                          (dir2, path2[0]['crn'], path2[1]['crn'], time_window2))
                     json_ret['intersections'].append(json_i)
         return json_ret
 
@@ -126,12 +127,12 @@ class Neo4jInterface:
             }
         """
         time_window = {
-                'start': datetime.strptime(path[0]['end'].strip(), '%I:%M %p'),
-                'end': datetime.strptime(path[1]['start'].strip(), '%I:%M %p'),
-                'days': self._day_intersection(path[0]['days'].strip(), path[1]['days'].strip())
+            'start': datetime.strptime(path[0]['end'].strip(), '%I:%M %p'),
+            'end': datetime.strptime(path[1]['start'].strip(), '%I:%M %p'),
+            'days': self._day_intersection(path[0]['days'].strip(), path[1]['days'].strip())
         }
 
-        if (time_window['start'] > time_window['end']):  # I'm walking to a class that has already passed
+        if time_window['start'] > time_window['end']:  # I'm walking to a class that has already passed
             return None
 
         if len(time_window['days']) == 0:  # No days overlap
@@ -162,7 +163,7 @@ class Neo4jInterface:
                 }
             },
             'student1': dir1,
-            'student2': dir2 
+            'student2': dir2
         }
         json_i['student1']['crn_from'] = crn_from1
         json_i['student1']['crn_to'] = crn_to1
@@ -342,6 +343,26 @@ class Neo4jInterface:
         with self._driver.session() as session:
             session.write_transaction(self._add_meeting, str(crn), start, end, building, str(room), days)
 
+        # -------  EDIT/DELETE IN NEO4J  ------- #
+
+    def get_sections(self, dept, num):
+        with self._driver.session() as session:
+            return session.write_transaction(self._get_sections, dept, str(num))
+
+    def change_class_num(self, dept, num, new_num):
+        with self._driver.session() as session:
+            session.write_transaction(self._change_class_num, dept, num, new_num)
+        return {}
+
+    def delete_course(self, dept, num):
+        with self._driver.session() as session:
+            session.write_transaction(self._delete_course, dept, str(num))
+        return {}
+
+    def get_all_courses(self):
+        with self._driver.session() as session:
+            return session.write_transaction(self._get_all_courses)
+
     # -------  DELETE FROM NEO4J  ------- #
     def delete_all(self):
         with self._driver.session() as session:
@@ -464,6 +485,51 @@ class Neo4jInterface:
             "MATCH (a) "
             "DETACH DELETE a ")
 
+    @staticmethod
+    def _get_all_courses(tx):
+        result = tx.run(
+            "MATCH (c:Course) "
+            "RETURN c")
+        js = {"courses": []}
+        for record in result.records():
+            course = record['c']
+            js['courses'].append({
+                "dept": course.get('dept'),
+                "course_num": course.get('num')
+            })
+        return js
+
+    @staticmethod
+    def _change_class_num(tx, dept, num, new_num):
+        tx.run(
+            "MATCH (c:Course) "
+            "WHERE c.dept = $dept AND c.num = $num "
+            "SET c.num = $new_num ",
+            dept=dept, num=num, new_num=new_num)
+
+    @staticmethod
+    def _get_sections(tx, dept, num):
+        result = tx.run(
+            "MATCH (c:Course)<-[:SectionOf]-(s:Section) "
+            "WHERE c.dept = $dept AND c.num = $num "
+            "RETURN s",
+            dept=dept, num=num)
+        js = {"sections": []}
+        for record in result.records():
+            section = record['s']
+            js['sections'].append({
+                "crn": section.get('crn'),
+            })
+        return js
+
+    @staticmethod
+    def _delete_course(tx, dept, num):
+        tx.run(
+            "MATCH (c:Course) "
+            "WHERE c.dept = $dept AND c.num = $num "
+            "DETACH DELETE c ",
+            dept=dept, num=num)
+
 
 def get_graph_db() -> Neo4jInterface:
     """
@@ -491,3 +557,6 @@ def close_graph_db(e=None):
 def register_graph_db(app):
     app.teardown_appcontext(close_graph_db)
 
+
+if __name__ == '__main__':
+    print(dir(Neo4jInterface))
