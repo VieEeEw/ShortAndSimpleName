@@ -7,7 +7,7 @@
           :class="{ 'main-drawer-toggle-inactive': menuClosed }"
           class="main-drawer-toggle material-icons"
         />
-        <slot :setMarkers="setMarkers" :random="'tests'" />
+        <slot />
         <div v-if="isMobile" class="user-profile-docker">
           <UserProfile />
         </div>
@@ -120,7 +120,7 @@ body {
   right: 15px;
   top: 15px;
   display: block;
-  width: 400px;
+  width: 300px;
   border-radius: 15px;
   overflow: hidden;
   background-color: white;
@@ -187,9 +187,6 @@ export default {
     drawerToggle(e) {
       e.preventDefault();
       this.menuClosed = !this.menuClosed;
-    },
-    setMarkers(markersArr) {
-      this.markers = markersArr;
     }
   }
 };
