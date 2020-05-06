@@ -18,13 +18,13 @@ def course_dispatch(subject, number):
         return gdb.get_sections(subject, number)
     elif request.method == 'PUT':
         gdb.add_course(subject, number)
-        return make_response({'status': 'add successful'}, 200)
+        return make_response({'status': 'add successfully'}, 200)
     elif request.method == 'PATCH':
         gdb.change_class_num(subject, number, list(request.json.values())[0])
-        return make_response({'status': 'add successful'}, 200)
+        return make_response({'status': 'change successfully'}, 200)
     elif request.method == 'DELETE':
         gdb.delete_course(subject, number)
-        return make_response({'status': 'add successful'}, 200)
+        return make_response({'status': 'delete successfully'}, 200)
 
 
 @data_bp.route('/courses', methods=['GET'])
@@ -44,14 +44,14 @@ def crn():
                              200)
     elif request.method == 'POST':
         ls = rdb.execute("SELECT `crn` FROM `user_crn` WHERE net_id=?", (netid,)).fetchall()
-        for CRN in request.json['crns']:
+        for CRN in set(request.json['crns']):
             if CRN in ls:
                 continue
             rdb.execute("INSERT INTO user_crn(net_id, crn) VALUES(?, ?)", (netid, CRN))
             rdb.commit()
         return make_response({'status': 'add successfully'}, 200)
     elif request.method == 'DELETE':
-        for CRN in request.json['crns']:
+        for CRN in set(request.json['crns']):
             rdb.execute("DELETE FROM user_crn WHERE net_id=? AND crn=?", (netid, CRN))
             rdb.commit()
         return make_response({'status': 'delete successfully'}, 200)
