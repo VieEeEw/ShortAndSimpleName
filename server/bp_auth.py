@@ -58,6 +58,7 @@ def register():
                         generate_password_hash(password), new_token))
             db.commit()
             session['token'] = new_token
+            session['net_id'] = netid
             return make_response({'status': "create successfully"}, 200)
         return make_response({
             'error': error
