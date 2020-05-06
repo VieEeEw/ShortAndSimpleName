@@ -66,7 +66,7 @@ def register():
 
 @auth_bp.route('/delete', methods=['POST'])
 def delete():
-    netid = session['net_id']
+    netid = request.json['net_id']
     if netid is None:
         return make_response({'error': 'Invalid login status, try login again'}, 403)
     db = get_db()
@@ -75,7 +75,7 @@ def delete():
         return make_response({
             'error': error
         }, code)
-    db.execute("DELETE FROM user WHERE net_id=?", (netid,))
+    db.execute("DELETE FROM `user` WHERE net_id=?", (netid,))
     db.commit()
     session.pop('token')
     return make_response({'status': "delete successfully"}, 200)
@@ -83,7 +83,7 @@ def delete():
 
 @auth_bp.route('/update-pswd', methods=['POST'])
 def update_pswd():
-    netid = session['net_id']
+    netid = request.json['net_id']
     pswd = request.json['password']
     new_pswd = request.json['new_password']
     if netid is None:
