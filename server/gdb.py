@@ -258,8 +258,8 @@ class Neo4jInterface:
                 'Please save this key in "server/google_backend.key"'))
 
         # URL spacing # TODO localization?
-        origin = building_from.replace(' ', '+') + ('+UIUC')
-        destination = building_to.replace(' ', '+') + ('+UIUC')
+        origin = f'{building_from} Urbana IL'.replace(' ', '+')
+        destination = f'{building_to} Urbana IL'.replace(' ', '+')
 
         # Build URL for request
         endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
