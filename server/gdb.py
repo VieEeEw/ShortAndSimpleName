@@ -257,9 +257,14 @@ class Neo4jInterface:
                 'Unable to read Google Maps API Key for the backend.\n'
                 'Please save this key in "server/google_backend.key"'))
 
-        # URL spacing # TODO localization?
-        origin = f'{building_from} Urbana IL'.replace(' ', '+')
-        destination = f'{building_to} Urbana IL'.replace(' ', '+')
+        # Localization and cleaning
+        origin = building_from
+        destination = building_to
+        for place in (origin, destination):
+            if place == 'Electrical & Computer Eng Bldg':  # temporary hardcode to fix localization
+                place = 'University of Illinois Department of Electrical and Computer Engineering, 306 N Wright St, Urbana, IL 61801'
+            place += ' Illinois'
+            place.replace(' ', '+')
 
         # Build URL for request
         endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
