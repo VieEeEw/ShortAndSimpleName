@@ -7,7 +7,9 @@
           :class="{ 'main-drawer-toggle-inactive': menuClosed }"
           class="main-drawer-toggle material-icons"
         />
-        <slot />
+        <div style="box-sizing:border-box; padding:10px 30px; margin-top:15px;">
+          <slot />
+        </div>
         <div v-if="isMobile" class="user-profile-docker">
           <UserProfile />
         </div>
@@ -55,7 +57,7 @@ body {
   display: grid;
   width: 100%;
   height: 100%;
-  grid-template: "drawer map" 1fr / 400px 1fr;
+  grid-template: "drawer map" 1fr / 450px 1fr;
 }
 
 .layout-inactive {

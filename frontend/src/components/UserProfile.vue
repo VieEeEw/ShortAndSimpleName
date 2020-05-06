@@ -158,7 +158,7 @@ export default {
           { withCredentials: true }
         );
         this.currentUser = {
-          name: "John Appleseed",
+          name: data.name,
           net_id: this.loginForm.net_id
         };
         this.isLoggedIn = true;
@@ -188,6 +188,8 @@ export default {
           { net_id: this.currentUser.net_id, ...this.editProfileForm },
           { withCredentials: true }
         );
+        this.isEditProfile = false;
+        this.editProfileForm = initialState.editUserProfile;
       } catch (err) {
         alert(err.response.data.error);
       }
