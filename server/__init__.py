@@ -37,6 +37,7 @@ def create_app(test_config=None):
     CORS(auth_bp, supports_credentials=True, origin=["app.dev.localhost:8080"])
     CORS(data_bp, supports_credentials=True, origin=["app.dev.localhost:8080"])
     app.register_blueprint(auth_bp)
+    app.register_blueprint(data_bp)
 
     @app.route('/')
     def index():
