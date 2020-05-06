@@ -32,6 +32,7 @@ def login():
                        (token, netid))
             db.commit()
             session['token'] = token
+            session['net_id'] = netid
             return make_response({
                 'status': "Login successfully",
                 "name": user['name']
