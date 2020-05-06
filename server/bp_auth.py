@@ -75,7 +75,7 @@ def delete():
         return make_response({
             'error': error
         }, code)
-    db.execute("DELETE `user` WHERE net_id=?", (netid,))
+    db.execute("DELETE FROM `user` WHERE net_id=?", (netid,))
     db.commit()
     session.pop('token')
     return make_response({'status': "delete successfully"}, 200)
@@ -94,6 +94,6 @@ def update_pswd():
         return make_response({
             'error': error
         }, code)
-    db.execute("UPDATE FROM `user` SET pswd=? WHERE net_id=?", (generate_password_hash(new_pswd), netid))
+    db.execute("UPDATE `user` SET pswd=? WHERE net_id=?", (generate_password_hash(new_pswd), netid))
     db.commit()
     return make_response({'status': "delete successfully"}, 200)
