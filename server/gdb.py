@@ -3,6 +3,7 @@ from flask import current_app, g
 import urllib.request
 import json
 from itertools import permutations
+from datetime import datetime
 
 """
 Initialize an interface with: Neo4j_Interface(URI, USER, PW)
@@ -18,9 +19,7 @@ https://wiki.illinois.edu/wiki/display/CS411AASP20/ShortAndSimpleName+-+ER+Desig
 NOTE: user and prereqOf not implemented yet
 TODO: update ER diagram with digital version and normalized capitalization
 
-
 """
-
 
 class Neo4jInterface:
 
@@ -42,6 +41,7 @@ class Neo4jInterface:
                         'time_window': {
                             'start': '1:50pm',
                             'end': '2:00pm'
+                            'days': 'MW'
                         }
                     },
                     'student1': {
@@ -83,40 +83,114 @@ class Neo4jInterface:
         meetings1 = self._get_meetings(crn_list_1)
         meetings2 = self._get_meetings(crn_list_2)
 
-        paths1 = permutations(meetings1, 2)
-        paths2 = permutations(meetings2, 2)
+        paths1 = list(permutations(meetings1, 2))
+        paths2 = list(permutations(meetings2, 2))
 
         for path1 in paths1:
+            time_window1 = self._get_time_window(path1)
+            if time_window1 is None:
+                continue
             dir1 = self.get_directions(path1[0]['building'], path1[1]['building'])
             if not dir1['success']:
                 continue
             for path2 in paths2:
-                # TODO account for date/time
-                # TODO cache res in dict
+                # TODO cache results
+                time_window2 = self._get_time_window(path2)
+                if time_window2 is None:
+                    continue
+
+                if not self._time_window_overlap(time_window1, time_window2):
+                    continue
+
                 dir2 = self.get_directions(path2[0]['building'], path2[1]['building'])
                 if not dir2['success']:
                     continue
-                intersect = self.intersect_paths(dir1['steps'], dir2['steps'])
-                if intersect['intersects']:
-                    # we found an intersection!
-                    json_i = {
-                        'intersection': {
-                            'lat': intersect['lat'],
-                            'long': intersect['long'],
-                            'time_window': {
-                                'start': 'TBD',
-                                'end': 'TBD'
-                            }
-                        },
-                        'student1': dir1,
-                        'student2': dir2
-                    }
-                    json_i['student1']['crn_from'] = path1[0]['crn']
-                    json_i['student1']['crn_to'] = path1[1]['crn']
-                    json_i['student2']['crn_from'] = path2[0]['crn']
-                    json_i['student2']['crn_to'] = path2[1]['crn']
+
+                intersection = self.intersect_paths(dir1['steps'], dir2['steps'])
+                if intersection['intersects']:  # we found an intersection!
+                    json_i = self._make_intersection_json(intersection, 
+                        (dir1, path1[0]['crn'], path1[1]['crn'], time_window1), 
+                        (dir2, path2[0]['crn'], path2[1]['crn'], time_window2))
                     json_ret['intersections'].append(json_i)
         return json_ret
+
+    def _get_time_window(self, path):
+        """
+        Find the time window where the student could be walking between 2 classes
+        :param path: a tuple of meeting dictionaries (from, to), see 'meetings' in get_crn_data() 
+        :return: None if invalid pair of classes, otherwise a dictionary:
+            {
+                'start': datetime.datetime object,
+                'end': datetime.datetime object,
+                'days': 'MW'
+            }
+        """
+        time_window = {
+                'start': datetime.strptime(path[0]['end'].strip(), '%I:%M %p'),
+                'end': datetime.strptime(path[1]['start'].strip(), '%I:%M %p'),
+                'days': self._day_intersection(path[0]['days'].strip(), path[1]['days'].strip())
+        }
+
+        if (time_window['start'] > time_window['end']):  # I'm walking to a class that has already passed
+            return None
+
+        if len(time_window['days']) == 0:  # No days overlap
+            return None
+
+        return time_window
+
+    def _make_intersection_json(self, intersection, info1, info2):
+        """
+        Builds a dictionary to be added to the array 'intersections' in get_intersection()
+        :param intersection: dictionary returned by intersect_paths()
+        :param info1: tuple of the format (dir, crn_from, crn_to, time_window)
+            ex. (get_directions(), '61820', '42069', _get_time_window())
+        :param info2: see :param info1
+        :return: see dictionary in the array 'intersections' in get_intersection()
+        """
+        dir1, crn_from1, crn_to1, time_window1 = info1
+        dir2, crn_from2, crn_to2, time_window2 = info2
+
+        json_i = {
+            'intersection': {
+                'lat': intersection['lat'],
+                'long': intersection['long'],
+                'time_window': {
+                    'start': max(time_window1['start'], time_window2['start']).strftime('%I:%M %p'),  # latest start
+                    'end': min(time_window1['end'], time_window2['end']).strftime('%I:%M %p'),  # earliest end 
+                    'days': self._day_intersection(time_window1['days'], time_window2['days'])
+                }
+            },
+            'student1': dir1,
+            'student2': dir2 
+        }
+        json_i['student1']['crn_from'] = crn_from1
+        json_i['student1']['crn_to'] = crn_to1
+        json_i['student2']['crn_from'] = crn_from2
+        json_i['student2']['crn_to'] = crn_to2
+        return json_i
+
+    def _time_window_overlap(self, time_window1, time_window2):
+        """
+        Finds an intersections between 2 paths
+        :param time_window1: See output for _get_time_window
+        :param time_window2: See output for _get_time_window
+        :return: bool if they overlap
+        """
+        if time_window1['start'] > time_window2['end'] or time_window2['start'] > time_window1['end']:
+            return False
+        if len(self._day_intersection(time_window1['days'], time_window2['days'])) == 0:
+            return False
+        return True
+
+    def _day_intersection(self, days1, days2):
+        """
+        Finds an intersections between 2 paths
+        :param days1: string containing only the letter for the days of the week; ex. 'MW'
+        :param days2: Same as :param days1.
+        :return: The common letters between days1 and days2
+        """
+        return ''.join([day for day in days1 if day in days2])
 
     def intersect_paths(self, steps1, steps2):
         """
@@ -183,9 +257,9 @@ class Neo4jInterface:
                 'Unable to read Google Maps API Key for the backend.\n'
                 'Please save this key in "server/google_backend.key"'))
 
-        # URL spacing # TODO add ",+UIUC" for localization?
-        origin = building_from.replace(' ', '+')
-        destination = building_to.replace(' ', '+')
+        # URL spacing # TODO localization?
+        origin = building_from.replace(' ', '+') + ('+UIUC')
+        destination = building_to.replace(' ', '+') + ('+UIUC')
 
         # Build URL for request
         endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
@@ -218,7 +292,7 @@ class Neo4jInterface:
         except Exception as e:
             json_ret['success'] = False
             print(f'Got an error of type {type(e)} and message {e}'
-                  f'(BAD RESPONSE FROM GOOGLE MAPS\bad api key? bad internet?)')
+                  f'\n(BAD RESPONSE FROM GOOGLE MAPS -> bad api key? bad internet?)')
         return json_ret
 
     # -------  GET DATA FROM NEO4J  ------- #
@@ -411,12 +485,3 @@ def close_graph_db(e=None):
 def register_graph_db(app):
     app.teardown_appcontext(close_graph_db)
 
-# if __name__ == "__main__":
-#     db = Neo4jInterface('bolt://localhost:7687', 'neo4j', 'password')
-#     dir1 = db.get_directions('Loomis Laboratory', "Materials Science & Eng Bld")
-#     dir2 = db.get_directions("Transportation Building", "Natural History Building")
-#     intr = db.intersect_paths(dir1['steps'],dir2['steps'])
-#     crn_list_1 = [66935, 65314]  # loomis to material science
-#     crn_list_2 = [47191, 31352]  # transportation to natural history
-#     res = db.get_intersection(crn_list_1, crn_list_2)
-#     print(res)
