@@ -78,6 +78,7 @@ def delete():
     db.execute("DELETE FROM `user` WHERE net_id=?", (netid,))
     db.commit()
     session.pop('token')
+    session.pop('net_id')
     return make_response({'status': "delete successfully"}, 200)
 
 

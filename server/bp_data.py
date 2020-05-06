@@ -1,5 +1,4 @@
 from flask import Blueprint, make_response, request, session
-from .rdb import get_db
 from .gdb import get_graph_db
 from .rdb import get_db
 from .util import validate_token
@@ -11,7 +10,7 @@ data_bp = Blueprint('data', __name__, url_prefix='/data')
 def course_dispatch(subject, number):
     gdb = get_graph_db()
     rdb = get_db()
-    netid = request.json['net_id']
+    netid = session['net_id']
     code, msg = validate_token(rdb, netid, session['token'])
     if code != 200:
         return make_response({'error': msg}, code)
@@ -36,7 +35,7 @@ def courses():
 @data_bp.route('/crn', methods=['GET', 'POST', 'DELETE'])
 def crn():
     rdb = get_db()
-    netid = request.json['net_id']
+    netid = session['net_id']
     code, msg = validate_token(rdb, netid, session['token'])
     if code != 200:
         return make_response({'error': msg}, code)

@@ -1,6 +1,4 @@
-
-'''
-
+"""
 Parses a json of the following format:
 { 
     'courses': [
@@ -26,31 +24,28 @@ Parses a json of the following format:
         }
     ]
 }
-'''
+"""
 
 import json
-import sys
-from gdb import Neo4jInterface
-
-
+from tqdm import tqdm
+from server.gdb import Neo4jInterface
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print(f'USAGE: python3 {sys.argv[0]} URI username password')
-        print(f'example: python3 {sys.argv[0]} bolt://localhost:7687 neo4j password')
-        exit(1)
+
     try:
         print("Running...")
-        db = Neo4jInterface(sys.argv[1], sys.argv[2], sys.argv[3])
+        db = Neo4jInterface('bolt://localhost:7687', 'neo4j', 'password')
         with open('cisdata.json', 'r') as json_file:
             data = json.load(json_file)
-            for course in data['courses']:
-                db.add_course(course['department'], course['course_num'])
-                for section in course['sections']:
-                    db.add_section(course['department'], course['course_num'], section['crn'])
-                    for meeting in section['meetings']:
-                        if meeting['building'] is not None:
-                            db.add_meeting(section['crn'], meeting['start'], meeting['end'], meeting['building'], meeting['room'], meeting['days'])
+            with tqdm(data['courses']) as t:
+                for course in t:
+                    db.add_course(course['department'], course['course_num'])
+                    for section in course['sections']:
+                        db.add_section(course['department'], course['course_num'], section['crn'])
+                        for meeting in section['meetings']:
+                            if meeting['building'] is not None:
+                                db.add_meeting(section['crn'], meeting['start'], meeting['end'], meeting['building'],
+                                               meeting['room'], meeting['days'])
         print('Done!')
     except Exception as e:
         print('Make sure "cisdata.json" is in this directory, and the Neo4j command line arguments are correct.')
