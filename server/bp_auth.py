@@ -27,11 +27,9 @@ def login():
             error = 'Incorrect username or password.'
         else:
             # If the token is invalid, generate a new token for the user
-            token = user['token']
-            if user['xpire_t'] < datetime.utcnow():
-                token = md5(f"{password}{datetime.utcnow()}".encode()).hexdigest()
-                db.execute("UPDATE user SET token = ? WHERE net_id = ?",
-                           (token, netid))
+            token = md5(f"{password}{datetime.utcnow()}".encode()).hexdigest()
+            db.execute("UPDATE user SET token = ? WHERE net_id = ?",
+                       (token, netid))
             session['token'] = token
             return make_response({
                 'status': "Login successfully"
