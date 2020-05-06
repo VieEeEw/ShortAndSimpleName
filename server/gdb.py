@@ -409,7 +409,7 @@ class Neo4jInterface:
 
         div = det(x_diff, y_diff)
         if div == 0:
-            return None
+            return LineTools.line_segment_intersection(line1[0], line1[1], line2[0], line2[1])
 
         d = (det(*line1), det(*line2))
         x = det(d, x_diff) / div
@@ -533,6 +533,75 @@ class Neo4jInterface:
             "DETACH DELETE c ",
             dept=dept, num=num)
 
+class LineTools:
+    def slope(a, b):
+        '''
+        :param a, b: (x,y) cordinate tuples
+        :return: slope (number)
+        '''
+        # slope = (y2 - y1) / (x2 - x1)
+        dy = b[1] - a[1]
+        dx = b[0] - a[0]
+        if dx == 0:
+            return 999999
+        return dy / dx
+
+
+    def yintercept(a, slope):
+        '''
+        :param a: (x,y) cordinate tuple
+        :param slope: number
+        :return: y value (number)
+        '''
+        # yintercept = y - mx
+        return a[1] - slope*a[0]
+
+
+    def line_intersection(a, b, c, d):
+        '''
+        :param a,b,c,d: (x,y) cordinate tuples
+        :return: (x,y) cordinate intersection, or None if no intersection
+        '''
+        # y = mx + b
+        # Y = MX + B
+        # (x=X) = (B - b) / (m - M)
+        slope1 = LineTools.slope(a, b)
+        yint1 = LineTools.yintercept(a, slope1)
+        slope2 = LineTools.slope(c, d)
+        yint2 = LineTools.yintercept(c, slope2)
+
+        if slope1 == slope2: # parallel
+            # same line? plug it in
+            if c[1] == slope1 * c[0] + yint2:
+                return c
+            return None
+
+        x = (yint2 - yint1) / (slope1 - slope2)
+        y = slope1 * x + yint1
+        return (x, y)
+
+    def line_segment_intersection(a1, a2, b1, b2):
+        '''
+        :param a1,a2,b1,b2: (x,y) cordinate tuples (segment is from a1 to a2, and b1 to b2)
+        :return: (x,y) cordinate intersection, or None if no intersection
+        '''
+        x_rang = a1[0], a2[0]
+        y_rang = a1[1], a2[1]
+        p = LineTools.line_intersection(a1, a2, b1, b2)
+        if p is None:
+            return None
+        
+        x,y = p
+
+        x_rang1 = (a1[0], a2[0])
+        y_rang1 = (a1[1], a2[1])
+        x_rang2 = (b1[0], b2[0])
+        y_rang2 = (b1[1], b2[1])
+
+        if min(x_rang1) <= x <= max(x_rang1) and min(y_rang1) <= y <= max(y_rang1):
+            if min(x_rang2) <= x <= max(x_rang2) and min(y_rang2) <= y <= max(y_rang2):
+                return x, y
+        return None
 
 def get_graph_db() -> Neo4jInterface:
     """
