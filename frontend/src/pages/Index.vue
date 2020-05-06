@@ -11,25 +11,40 @@
                     <form>
                         <md-field>
                             <label>Subject...</label>
-                            <md-input type="text" v-model="subjectForm.name" required />
+                            <md-input type="text" v-model="subjectForm" required />
                         </md-field>
                     </form>
+                    <md-list>
+                        <md-list-item v-for="course in courses" :key="course.dept">
+                            {{course.dept}}
+                        </md-list-item>
+                    </md-list>
                   </md-tab>
                   <md-tab id="tab-location" md-label="Location">
                       <form>
                         <md-field>
                             <label>Location...</label>
-                            <md-input type="text" v-model="locationForm.name" required />
+                            <md-input type="text" v-model="locationForm" required />
                         </md-field>
                     </form>
+                      <md-list>
+                        <md-list-item v-for="course in courses" :key="course.dept">
+                            {{course.dept}}
+                        </md-list-item>
+                    </md-list>
                   </md-tab>
                   <md-tab id="tab-time" md-label="Time">
                       <form>
                         <md-field>
                             <label>Time...</label>
-                            <md-input type="text" v-model="timeForm.name" required />
+                            <md-input type="text" v-model="timeForm" required />
                         </md-field>
                     </form>
+                      <md-list>
+                        <md-list-item v-for="course in courses" :key="course.dept">
+                            {{course.dept}}
+                        </md-list-item>
+                    </md-list>
                   </md-tab>
             </md-tabs>
             </md-card-content>
@@ -46,34 +61,43 @@
 </template>
 
 <script>
-const initialState = {
-  isLoggedIn: false,
-  currentUser: {
-    name: "",
-    net_id: ""
-  },
-  loginForm: {
-    net_id: "",
-    password: ""
-  },
-  registerForm: {
-    net_id: "",
-    name: "",
-    password: ""
-  }
-};
-
 export default {
   name: "Home",
   data() {
     return {
-        subjectForm: { ...initialState.subjectForm },
-        locationForm: { ...initialState.locationForm },
-        timeForm: { ...initialState.timeForm }
+        courses: [],
+        sections: [],
+        subjectForm: "",
+        locationForm: "",
+        timeForm: ""
     };
   },
+  async mounted() {
+    console.log(this);
+    await this.fetchCourses();
+    // await this.fetchSections();
+  },
   methods: {
-    
+    async fetchCourses() {
+      const { data } = await this.axios.get(
+        "http://localhost:5000/data/courses"
+      );
+      console.log(data);
+      this.courses = data.courses
+        .filter(course => course.course_num)
+        .sort(
+          (courseA, courseB) =>
+            this.getCourseStr(courseA.dept, courseA.course_num) <
+            this.getCourseStr(courseB.dept, courseB.course_num)
+        )
+        .slice(0, 100);
+    },
+    async fetchSections() {
+      const { data } = await this.axios.get(
+        "http://localhost:5000/data/sections"
+      );
+      this.sections = data.sections;
+    }
   }
 };
 </script>
