@@ -395,11 +395,14 @@ class Neo4jInterface:
         y = det(d, y_diff) / div
 
         # additional checks for line segment
-        x_rang = (line1[0][0], line1[1][0])
-        y_rang = (line1[0][1], line1[1][1])
+        x_rang1 = (line1[0][0], line1[1][0])
+        y_rang1 = (line1[0][1], line1[1][1])
+        x_rang2 = (line2[0][0], line2[1][0])
+        y_rang2 = (line2[0][1], line2[1][1])
 
-        if min(x_rang) < x < max(x_rang) and min(y_rang) < y < max(y_rang):
-            return x, y
+        if min(x_rang1) < x < max(x_rang1) and min(y_rang1) < y < max(y_rang1):
+            if min(x_rang2) < x < max(x_rang2) and min(y_rang2) < y < max(y_rang2):
+                return x, y
         return None
 
     # -------  Transaction methods for Neo4j  ------- #
