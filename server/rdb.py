@@ -44,3 +44,11 @@ def init_db_command():
 def register_db(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+
+
+if __name__ == '__main__':
+    db = sqlite3.connect(
+        './server.sqlite',
+        detect_types=sqlite3.PARSE_DECLTYPES
+    )
+    print(db.executescript("SELECT * FROM `user`").fetchall())

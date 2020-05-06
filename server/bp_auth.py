@@ -20,7 +20,7 @@ def login():
         password = request.json['password']
         db = get_db()
         user = db.execute(
-            'SELECT * FROM user WHERE net_id = ?', (netid,)).fetchone()
+            'SELECT * FROM `user` WHERE net_id = ?', (netid,)).fetchone()
         if user is None:
             error = 'Netid not found, try register first.'
         elif not check_password_hash(user['pswd'], password):
@@ -28,11 +28,13 @@ def login():
         else:
             # If the token is invalid, generate a new token for the user
             token = md5(f"{password}{datetime.utcnow()}".encode()).hexdigest()
-            db.execute("UPDATE user SET token = ? WHERE net_id = ?",
+            db.execute("UPDATE `user` SET token = ? WHERE net_id = ?",
                        (token, netid))
+            db.commit()
             session['token'] = token
             return make_response({
-                'status': "Login successfully"
+                'status': "Login successfully",
+                "name": user['name']
             }, 200)
         return make_response({
             'error': error
