@@ -1,11 +1,47 @@
 <template>
   <Layout :markers="markers" :paths="paths">
-    <h1>This is the home page</h1>
-    <p>
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur excepturi labore tempore expedita, et iste
-      tenetur suscipit explicabo! Dolores, aperiam non officia eos quod asperiores
-    </p>
-    <md-button v-on:click="plotIntersection">Plot Intersection</md-button>
+    <h1>High-Five Calculator</h1>
+    <p>Provide a schedule of CRNs for you and a friend, if your schedules are compatible, this tool will show you where you can high-five on your way to class!</p>
+    <br />
+    <form @submit="plotIntersection">
+      <div class="schedule-grid">
+        <div>
+          <h3>You</h3>
+          <md-field :key="index" v-for="(crn, index) in bl1">
+            <label>Your CRN {{index}}</label>
+            <md-input type="number" v-model="bl1[index]" />
+          </md-field>
+        </div>
+        <div>
+          <h3>Friend</h3>
+          <md-field :key="index" v-for="(crn, index) in bl2">
+            <label>Friend CRN {{index}}</label>
+            <md-input type="number" v-model="bl2[index]" />
+          </md-field>
+        </div>
+      </div>
+      <md-button
+        class="md-primary md-raised"
+        style="width:100%; position:relative; left:-10px;"
+        type="submit"
+      >Calculate High-Five</md-button>
+    </form>
+    <md-button
+      v-on:click="recordFavorites"
+      class="md-raised"
+      style="width:100%; position:relative; left:-10px;"
+    >Save my classes</md-button>
+    <md-button
+      v-on:click="fetchFavorites"
+      class="md-raised"
+      style="width:100%; position:relative; left:-10px;"
+    >Load my favorites</md-button>
+    <md-button
+      v-on:click="deleteFavorites"
+      class="md-raised"
+      style="width:100%; position:relative; left:-10px;"
+    >Clear my favorites</md-button>
+    <div class="response-text">{{this.error}}</div>
   </Layout>
 </template>
 
@@ -23,17 +59,70 @@ export default {
   metaInfo: {
     title: "Home"
   },
-
   data: function() {
     return {
       markers: [],
-      paths: []
+      paths: [],
+      bl1: [null, null],
+      bl2: [null, null],
+      error: ""
     };
   },
+  mounted() {
+    // Update form field length to always provide avaiable CRN inputs
+    setInterval(() => {
+      this.bl1 = this.bl1.filter(elt => !!elt);
+      this.bl2 = this.bl2.filter(elt => !!elt);
+      this.bl1.push(null);
+      this.bl2.push(null);
+    }, 100);
+  },
   methods: {
+    async fetchFavorites(e) {
+      e.preventDefault();
+      try {
+        const { data } = await this.axios.get(
+          "http://app.dev.localhost:5000/data/crn",
+          {
+            withCredentials: true
+          }
+        );
+        this.bl1 = [...new Set([...this.bl1, ...data.crns])];
+      } catch (err) {
+        alert("Please login");
+      }
+    },
+    async deleteFavorites(e) {
+      e.preventDefault();
+      try {
+        const { data } = await this.axios.delete(
+          "http://app.dev.localhost:5000/data/crn",
+          {
+            withCredentials: true
+          }
+        );
+        this.bl1 = [];
+      } catch (err) {
+        alert("Please login");
+      }
+    },
+    async recordFavorites(e) {
+      e.preventDefault();
+      try {
+        const { data } = await this.axios.post(
+          "http://app.dev.localhost:5000/data/crn",
+          {
+            crns: this.bl1.filter(crn => crn !== null).map(crn => Number(crn))
+          },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        alert("Please login");
+      }
+    },
     async plotIntersection(e) {
       e.preventDefault();
-      console.log(this);
+      this.error = "";
       this.markers = [];
       this.paths = [];
       try {
@@ -42,11 +131,19 @@ export default {
         } = await this.axios.post(
           "http://app.dev.localhost:5000/data/intersection",
           {
-            bl1: [38331, 58598],
-            bl2: [65299, 34572]
+            bl1: this.bl1.filter(crn => crn !== null),
+            bl2: this.bl2.filter(crn => crn !== null)
+            // bl1: [38331, 58598],
+            // bl2: [65299, 34572]
           },
           { withCredentials: true }
         );
+
+        if (intersections.length == 0) {
+          this.error = "No intersection";
+          return;
+        }
+
         try {
           intersections.forEach(intersection => {
             const intersectionMarker = toMarker(intersection.intersection);
@@ -89,5 +186,17 @@ export default {
 <style>
 .home-links a {
   margin-right: 1rem;
+}
+.response-text {
+  width: 100%;
+  text-align: center;
+  margin-top: 25px;
+  color: red;
+}
+.schedule-grid {
+  display: grid;
+  position: relative;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: 15px;
 }
 </style>
