@@ -250,7 +250,7 @@ class Neo4jInterface:
         json_ret = {'steps': [], 'start_address': None, 'start_location': None, 'end_address': None,
                     'end_location': None, 'success': False}
         try:
-            with open('google_backend.key', 'r') as f:
+            with open('server/google_backend.key', 'r') as f:
                 api_key = f.read()
         except Exception:
             raise (FileNotFoundError(

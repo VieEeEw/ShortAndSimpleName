@@ -24,6 +24,6 @@ def courses():
     return get_graph_db().get_all_courses()
 
 
-@data_bp.route('/intersection', methods=['GET'])
+@data_bp.route('/intersection', methods=['POST'])
 def intersection():
     return get_graph_db().get_intersection(request.json['bl1'], request.json['bl2'])
