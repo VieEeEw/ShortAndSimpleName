@@ -261,7 +261,7 @@ class Neo4jInterface:
         def localize_clean(place):
             if place == 'Electrical & Computer Eng Bldg':  # temporary hardcode to fix localization
                 place = 'University of Illinois Department of Electrical and Computer Engineering, 306 N Wright St, Urbana, IL 61801'
-            place += ' Illinois'
+            place += ' Urbana Illinois'
             place = place.replace(' ', '+')
             return place
 
